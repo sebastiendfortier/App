@@ -36,7 +36,7 @@ This will load the specified compiler and define the ECCI_DATA_DIR variable for 
 #+begin_src
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=${your_choice}
+cmake .. -DCMAKE_INSTALL_PREFIX=[your install path]-Drmn_ROOT=[rmnlib location]
 make -j 4
 make test
 make install
