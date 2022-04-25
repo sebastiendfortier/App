@@ -1,0 +1,12 @@
+NAME       : App
+VERSION    : 0.1.0
+BUILD      : Debug
+STATE      : 
+DESCRIPTION: ECCC-MRD Application management library
+SUMMARY    : This library allows for application management of parameters, logs, ...
+MAINTAINER : Jean-Philippe Gauthier - Jean-Philippe.Gauthier@canada.ca
+URL        : https://gitlab.science.gc.ca/RPN-SI/libapp
+
+# Dependencies 
+#    =,<,<=,>,>= : Version rules
+#    ~           : Optional
