@@ -23,31 +23,17 @@ include(ec_compiler_presets)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
 
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
-add_compile_definitions(HAVE_GPC)
-
 if(${CMAKE_SYSTEM_PROCESSOR} EQUAL x86_64)
    add_compile_options(-fPIC -DSTDC_HEADERS)
 endif()
-
-set(ENV{OMPI} _ompi)
-if(DEFINED ENV{OMPI})
-   message(STATUS "OMPI build enabled")
-
-   find_package(MPI REQUIRED)
-   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-   set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
-   include_directories(${MPI_INCLUDE_PATH})
-   add_compile_definitions(HAVE_MPI)
-
-   find_package(OpenMP REQUIRED) 
-   add_compile_options(${OpenMP_C_FLAGS})
-   add_compile_definitions(HAVE_OPENMP)
-endif()
-
-find_package(rmn ${rmn_REQ_VERSION} COMPONENTS SHARED OPTIONAL)
-
 add_compile_definitions(_${CMAKE_SYSTEM_NAME}_ _GNU_SOURCE)
+
+find_package(MPI REQUIRED COMPONENTS C)
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
+
+find_package(OpenMP REQUIRED COMPONENTS C)
+find_package(rmn ${rmn_REQ_VERSION} COMPONENTS shared)
 
 add_subdirectory(src src)
 

@@ -43,13 +43,17 @@
 #include <unistd.h>
 #include <sys/signal.h>
 #ifndef _AIX
-#include <sys/syscall.h>
+   #include <sys/syscall.h>
 #endif
 
 #include "App.h"
 #include "App_build_info.h"
 #include "str.h"
 #include "System.h"
+#ifdef HAVE_RMN
+   #include "rpnmacros.h"
+   #include "rmn.h"
+#endif
 
 static TApp AppInstance;                         ///< Static App instance
 __thread TApp *App=&AppInstance;                 ///< Per thread App pointer
@@ -612,7 +616,7 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
       color=App->LogColor?colors[Level]:colors[APP_INFO];
       
       if (Level>=0) {
-#ifdef HAVEHAVE_MPI
+#ifdef HAVE_MPI
          if (App_IsMPI())
             fprintf(App->LogStream,"%s#%02d (%s) ",color,App->RankMPI,levels[Level]);
          else 

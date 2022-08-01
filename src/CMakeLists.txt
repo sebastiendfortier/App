@@ -1,25 +1,38 @@
-message(STATUS "Generating libApp librairie")
+message(STATUS "Generating App librairie")
 
 file(GLOB PROJECT_INCLUDE_FILES *.h)
 file(GLOB PROJECT_C_FILES *.c)
 #file(GLOB PROJECT_F_FILES f90/*.f90 )
 
-add_library(App$ENV{OMPI} STATIC ${PROJECT_INCLUDE_FILES} ${PROJECT_C_FILES} ${PROJECT_F_FILES})
+#----- Common target dependencies
+foreach(target IN ITEMS App App-ompi)
+   add_library(${target} STATIC ${PROJECT_INCLUDE_FILES} ${PROJECT_C_FILES} ${PROJECT_F_FILES})
+   
+   message(STATUS "Adding dep to ${target} (${CMAKE_CURRENT_SOURCE_DIR})")
+   add_dependencies(${target} ${PROJECT_NAME}_build_info)
+   target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+   if(rmn_FOUND)
+      target_link_libraries(${target} PUBLIC rmn)
+   endif()
+endforeach()
 
-set_target_properties(App$ENV{OMPI} PROPERTIES 
+set_target_properties(App PROPERTIES 
+   VERSION ${PROJECT_VERSION}
+   PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
+   POSITION_INDEPENDENT_CODE  ON)
+
+set_target_properties(App-ompi PROPERTIES 
    VERSION ${PROJECT_VERSION}
    PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
    POSITION_INDEPENDENT_CODE  ON
    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}"
    LINK_FLAGS "${MPI_LINK_FLAGS}")
 
-add_dependencies(App$ENV{OMPI} ${PROJECT_NAME}_build_info)
+#----- Specific target dependencies
+target_compile_definitions(App-ompi PUBLIC HAVE_MPI HAVE_OPENMP)
+target_link_libraries(App-ompi PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
 
-#target_link_libraries(App$ENV{OMPI} ${LIBXML2_LIBRARIES})
-#target_link_libraries(App$ENV{OMPI} rmn)
-#target_link_libraries(App$ENV{OMPI} MPI::MPI_C OpenMP::OpenMP_C)
-
-install(TARGETS App$ENV{OMPI} 
+install(TARGETS App App$ENV{OMPI} 
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
    PUBLIC_HEADER DESTINATION include)

@@ -38,6 +38,10 @@
 
 #include "System.h"
 #include "App.h"
+#ifdef HAVE_RMN
+   #include "rpnmacros.h"
+   #include "rmn.h"
+#endif
 
 static char SYSTEM_STRING[256];
 

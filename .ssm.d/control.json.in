@@ -1,6 +1,6 @@
 {
    "name": "@NAME@",
-   "version": "@PROJECT_VERSION@",
+   "version": "@PROJECT_VERSION@@EC_COMP@",
    "platform": "@EC_PLAT@",
    "maintainer": "@MAINTAINER@",
    "summary": "@SUMMARY@ (@URL@)",

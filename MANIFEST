@@ -10,3 +10,5 @@ URL        : https://gitlab.science.gc.ca/RPN-SI/libapp
 # Dependencies 
 #    =,<,<=,>,>= : Version rules
 #    ~           : Optional
+
+rmn  ~>= 20.0.0
