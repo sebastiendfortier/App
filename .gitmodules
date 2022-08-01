@@ -5,3 +5,4 @@
 [submodule "ci-env"]
 	path = ci-env
 	url = git@gitlab.science.gc.ca:RPN-SI/ci-env
+	branch = dev

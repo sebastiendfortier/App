@@ -12,7 +12,7 @@ foreach(target IN ITEMS App App-ompi)
    add_dependencies(${target} ${PROJECT_NAME}_build_info)
    target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
    if(rmn_FOUND)
-      target_link_libraries(${target} PUBLIC rmn)
+      target_link_libraries(${target} PRIVATE rmn)
    endif()
 endforeach()
 
@@ -32,7 +32,7 @@ set_target_properties(App-ompi PROPERTIES
 target_compile_definitions(App-ompi PUBLIC HAVE_MPI HAVE_OPENMP)
 target_link_libraries(App-ompi PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
 
-install(TARGETS App App$ENV{OMPI} 
+install(TARGETS App App-ompi 
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
    PUBLIC_HEADER DESTINATION include)

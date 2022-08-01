@@ -366,10 +366,9 @@ void App_Start(void) {
 //      App_Log(APP_MUST,"libApp         : %s\n",PROJECT_VERSION_STRING);
 
 #ifdef HAVE_RMN
-      // Extract RMNLIB version
-      f77name(rmnlib_version)(rmn,&print,127);
-      rmn[126]='\0';
-      App_Log(APP_MUST,"Lib RMN        : %s\n",&rmn[22]);
+      extern char rmn_version[];
+      App_Log(APP_MUST,"Lib RMN        : %s\n",&rmn_version);
+
 #endif
 
       App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
