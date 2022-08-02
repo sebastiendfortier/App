@@ -2,7 +2,7 @@ message(STATUS "Generating App librairie")
 
 file(GLOB PROJECT_INCLUDE_FILES *.h)
 file(GLOB PROJECT_C_FILES *.c)
-#file(GLOB PROJECT_F_FILES f90/*.f90 )
+file(GLOB PROJECT_F_FILES *.f90)
 
 #----- Common target dependencies
 foreach(target IN ITEMS App App-ompi)
@@ -36,4 +36,6 @@ install(TARGETS App App-ompi
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
    PUBLIC_HEADER DESTINATION include)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/app.mod TYPE INCLUDE)
    

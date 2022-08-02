@@ -21,15 +21,14 @@ enable_testing()
 include(ec_compiler_presets)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_compile_definitions(_${CMAKE_SYSTEM_NAME}_ _GNU_SOURCE)
 
-find_package(MPI REQUIRED COMPONENTS C)
+find_package(MPI REQUIRED COMPONENTS)
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 
-find_package(OpenMP REQUIRED COMPONENTS C)
+find_package(OpenMP REQUIRED COMPONENTS)
 find_package(rmn ${rmn_REQ_VERSION} COMPONENTS static)
 
 add_subdirectory(src src)
