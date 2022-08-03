@@ -110,6 +110,7 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->LogLevel=APP_INFO;
    App->State=APP_STOP;
    App->Percent=0.0;
+   App->Step=0;
    App->Affinity=APP_AFFINITY_NONE;
    App->NbThread=0;
    App->NbMPI=1;
@@ -531,8 +532,12 @@ void App_Trap(int Signal) {
    new.sa_handler=App_TrapProcess;
    new.sa_flags=0x0;
    sigemptyset(&new.sa_mask);   
-   
+
+   // POSIX way    
    sigaction(Signal,&new,&old);
+
+   // C Standard way
+   // signal(Signal,App_TrapProcess);
 }
 
 /**----------------------------------------------------------------------------
@@ -617,10 +622,18 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
       if (Level>=0) {
 #ifdef HAVE_MPI
          if (App_IsMPI())
-            fprintf(App->LogStream,"%s#%02d (%s) ",color,App->RankMPI,levels[Level]);
+            if (App->Step) {
+               fprintf(App->LogStream,"%sP%03d (%s) #%d ",color,App->RankMPI,levels[Level],App->Step);
+            } else {
+               fprintf(App->LogStream,"%sP%03d (%s) ",color,App->RankMPI,levels[Level]);
+            }
          else 
 #endif     
-         fprintf(App->LogStream,"%s(%s) ",color,levels[Level]);
+            if (App->Step) {
+               fprintf(App->LogStream,"%s(%s) #%d ",color,levels[Level],App->Step);
+            } else {
+               fprintf(App->LogStream,"%s(%s) ",color,levels[Level]);
+            }
       }
       
       va_start(args,Format);

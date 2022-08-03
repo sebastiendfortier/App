@@ -168,6 +168,7 @@ typedef struct TApp {
     double         Percent;              ///< Percentage of execution done (0=not started, 100=finished)
     struct timeval Time;                 ///< Timer for execution time
     int            Type;                 ///< App object type (APP_MASTER,APP_THREAD)
+    int            Step;                 ///< Model step
 
     int            Seed,*OMPSeed;        ///< Random number generator seed
     int           *TotalsMPI;            ///< MPI total number of items arrays
