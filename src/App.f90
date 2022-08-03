@@ -12,10 +12,10 @@ interface
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: type
-        type(C_PTR), value :: name
-        type(C_PTR), value :: version
-        type(C_PTR), value :: desc
-        type(C_PTR), value :: stamp
+        character(C_CHAR), dimension(*) :: name
+        character(C_CHAR), dimension(*) :: version
+        character(C_CHAR), dimension(*) :: desc
+        character(C_CHAR), dimension(*) :: stamp
     end FUNCTION
 
 !   void  App_Free(void);
@@ -59,7 +59,7 @@ interface
     integer(C_INT) FUNCTION app_loglevel(level) BIND(C, name="App_LogLevel")
         use, intrinsic :: iso_c_binding
         implicit none
-        integer(C_INT), value :: level
+        character(C_CHAR), dimension(*) :: level
     end FUNCTION
 
 !    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
@@ -69,8 +69,8 @@ interface
     integer(C_INT) FUNCTION app_parsebool(param,value,var) BIND(C, name="App_ParseBool")
         use, intrinsic :: iso_c_binding
         implicit none
-        type(C_PTR), value :: param
-        type(C_PTR), value :: value
+        character(C_CHAR), dimension(*) :: param
+        character(C_CHAR), dimension(*) :: value
         type(C_PTR), intent(out) :: var
     end FUNCTION
 
@@ -79,8 +79,8 @@ interface
     integer(C_INT) FUNCTION app_parsedate(param,value,var) BIND(C, name="App_ParseDate")
         use, intrinsic :: iso_c_binding
         implicit none
-        type(C_PTR), value :: param
-        type(C_PTR), value :: value
+        character(C_CHAR), dimension(*) :: param
+        character(C_CHAR), dimension(*) :: value
         integer(C_LONG), intent(out) :: var
     end FUNCTION
 
@@ -88,8 +88,8 @@ interface
     integer(C_INT) FUNCTION app_parsedatesplit(param,value,year,month,day,hour,min) BIND(C, name="App_ParseDateSplit")
         use, intrinsic :: iso_c_binding
         implicit none
-        type(C_PTR), value :: param
-        type(C_PTR), value :: value
+        character(C_CHAR), dimension(*) :: param
+        character(C_CHAR), dimension(*) :: value
         integer(C_INT), intent(out) :: year
         integer(C_INT), intent(out) :: month
         integer(C_INT), intent(out) :: day
@@ -101,8 +101,8 @@ interface
     integer(C_INT) FUNCTION app_parsecoords(param,value,lat,lon,index) BIND(C, name="App_ParseCoords")
         use, intrinsic :: iso_c_binding
         implicit none
-        type(C_PTR), value :: param
-        type(C_PTR), value :: value
+        character(C_CHAR), dimension(*) :: param
+        character(C_CHAR), dimension(*) :: value
         integer(C_INT), intent(out) :: lat
         integer(C_INT), intent(out) :: lon
         integer(C_INT), value :: index
@@ -154,7 +154,7 @@ interface
         use, intrinsic :: iso_c_binding
     end FUNCTION
 
-!   int   App_NodeGroup();
+!   int   App_NodeGroup(void);
     integer(C_INT) FUNCTION app_nodegroup() BIND(C, name="App_NodeGroup")
         use, intrinsic :: iso_c_binding
     end FUNCTION
