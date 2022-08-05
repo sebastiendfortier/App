@@ -52,12 +52,12 @@ static inline void App_TimerStop(TApp_Timer* Timer) {
 }
 
 //! Retrieve the accumulated time in number of milliseconds, as a double
-static inline double App_TimerTimeMS(const TApp_Timer* Timer) {
+static inline double App_TimerTime_ms(const TApp_Timer* Timer) {
    // If we only count microseconds in a year, this conversion to double does not lose any precision (about 2^31 us/year)
    return(Timer->TotalTime / 1000.0);
 }
 
-static inline double App_TimerTimeSinceStart(const TApp_Timer* Timer) {
+static inline double App_TimerTime_SinceStart(const TApp_Timer* Timer) {
    // If we only count microseconds in a year, this conversion to double does not lose any precision (about 2^31 us/year)
    return((get_current_time_us() - Timer->Start) / 1000.0);
 }
