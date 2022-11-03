@@ -1,0 +1,11 @@
+#----- Compiled object/library files
+*.o
+*.a
+
+#----- Editor pattern
+*.sw[po]
+*~
+
+#----- buil directory at the root path
+/build/
+/.vscode/
