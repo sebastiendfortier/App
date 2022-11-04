@@ -625,13 +625,23 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
       if (App->LogTime) {
          gettimeofday(&now,NULL);
 
-         if (App->LogTime==APP_DATETIME) {
-            lctm=localtime(&now.tv_sec);
-            strftime(time,32,"%c ",lctm);
-         } else {
-            timersub(&now,&App->Time,&diff);
-            lctm=localtime(&diff.tv_sec);
-            strftime(time,32,"%T ",lctm);
+         switch(App->LogTime) {
+            case APP_DATETIME:
+               lctm=localtime(&now.tv_sec);
+               strftime(time,32,"%c ",lctm);
+               break;
+            case APP_TIME:
+               timersub(&now,&App->Time,&diff);
+               lctm=localtime(&diff.tv_sec);
+               strftime(time,32,"%T ",lctm);
+               break;
+            case APP_SECOND:
+               timersub(&now,&App->Time,&diff);
+               snprintf(time,32,"%-8.3f ",diff.tv_sec+diff.tv_usec/1000000.0);
+               break;
+            case APP_MSECOND:
+               timersub(&now,&App->Time,&diff);
+               snprintf(time,32,"%-8li ",diff.tv_sec*1000+diff.tv_usec/1000);
          }
       } else {
          time[0]='\0';
