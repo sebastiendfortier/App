@@ -107,6 +107,7 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->LogError=0;
    App->LogColor=FALSE;
    App->LogTime=FALSE;
+   App->LogSplit=FALSE;
    App->Tag=NULL;
    App->LogLevel=APP_INFO;
    App->State=APP_STOP;
@@ -138,6 +139,9 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    }
    if ((c=getenv("APP_VERBOSETIME"))) {
       App_LogTime(c);
+   }
+   if ((c=getenv("APP_LOGSPLIT"))) {
+      App->LogSplit=TRUE;
    }
    
    // Check the language in the environment 
@@ -549,8 +553,9 @@ void App_Trap(int Signal) {
  * @author Jean-Philippe Gauthier
  * @date   Septembre 2014
 */
+
 void App_LogOpen(void) {
-   
+      
    if (!App->LogStream) {
       if (!App->LogFile || strcmp(App->LogFile,"stdout")==0) {
          App->LogStream=stdout;
@@ -567,6 +572,13 @@ void App_LogOpen(void) {
          App->LogStream=stdout;
          fprintf(stderr,"(WARNING) Unable to open log stream (%s), will use stdout instead\n",App->LogFile);
       }
+   }
+
+   // Split log file per MPI rank
+   char file[4096];
+   if (App->LogSplit && App_IsMPI()) {
+      snprintf(file,4096,"%s.%06d",App->LogFile,App->RankMPI);
+      App->LogStream=freopen(file,"a",App->LogStream);
    }
 }
 
@@ -811,6 +823,7 @@ void App_PrintArgs(TApp_Arg *AArgs,char *Token,int Flags) {
    
    printf("\n");
    if (Flags&APP_ARGSLOG)    printf("\n\t-%s, --%-15s %s","l", "log",     "Log file ("APP_COLOR_GREEN"stdout"APP_COLOR_RESET",stderr,file)");
+   if (Flags&APP_ARGSLOG)    printf("\n\t    --%-15s %s",      "logsplit","Split log file per MPI rank");
    if (Flags&APP_ARGSLANG)   printf("\n\t-%s, --%-15s %s","a", "language","Language ("APP_COLOR_GREEN"$CMCLNG"APP_COLOR_RESET",english,francais)");
    
    printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA or 0-4)");
@@ -917,6 +930,8 @@ int App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags) {
                free(App->LogFile);
                App->LogFile=strdup(env?strtok(str," "):argv[i]);
             }
+         } else if ((Flags&APP_ARGSLOG) && !strcasecmp(tok,"--logsplit")) { // Log file split
+            App->LogSplit=TRUE;
          } else if ((Flags&APP_ARGSTHREAD) && (!strcasecmp(tok,"-t") || !strcasecmp(tok,"--threads"))) { // Threads
             i++;
             if ((ner=ok=(i<argc && argv[i][0]!='-'))) {

@@ -157,6 +157,7 @@ typedef struct TApp {
     char*          Desc;                 ///< Description of application
     char*          TimeStamp;            ///< Compilation timestamp
     char*          LogFile;              ///< Log file
+    int            LogSplit;             ///< Split the log file per MPI rank path
 //    char*          TmpDir;               ///< Tmp directory
     char*          Tag;                  ///< Identificateur
     FILE*          LogStream;            ///< Log file associated stream
