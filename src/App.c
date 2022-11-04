@@ -136,6 +136,9 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    if ((c=getenv("APP_VERBOSECOLOR"))) {
       App->LogColor=TRUE;
    }
+   if ((c=getenv("APP_VERBOSETIME"))) {
+      App_LogTime(c);
+   }
    
    // Check the language in the environment 
    if ((c=getenv("CMCLNG"))) {
@@ -744,6 +747,33 @@ int App_LogLevel(char *Val) {
 }
 
 /**----------------------------------------------------------------------------
+ * @brief  Definir le format du temps dans les log
+ * @author Jean-Philippe Gauthier
+ * @date   Septembre 2008
+ *
+ * @param[in]  Val     Type de temps a afficher
+ */
+int App_LogTime(char *Val) {
+
+   if (Val) {
+      if (strcasecmp(Val,"NONE")==0) {
+         App->LogTime=0;
+      } else if (strcasecmp(Val,"DATETIME")==0) {
+         App->LogTime=1;
+      } else if (strcasecmp(Val,"TIME")==0) {
+         App->LogTime=2;
+      } else if (strcasecmp(Val,"SECOND")==0) {
+         App->LogTime=3;
+      } else if (strcasecmp(Val,"MSECOND")==0) {
+         App->LogTime=4;
+      } else {
+         App->LogTime=(TApp_LogTime)atoi(Val);
+      }
+   }
+   return(App->LogTime);
+}
+
+/**----------------------------------------------------------------------------
  * @brief  Print arguments information
  * @author Jean-Philippe Gauthier
  * @date   Mars 2014
@@ -784,6 +814,7 @@ void App_PrintArgs(TApp_Arg *AArgs,char *Token,int Flags) {
    if (Flags&APP_ARGSLANG)   printf("\n\t-%s, --%-15s %s","a", "language","Language ("APP_COLOR_GREEN"$CMCLNG"APP_COLOR_RESET",english,francais)");
    
    printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA or 0-4)");
+   printf("\n\t-%s, --%-15s %s","v", "verbosetime",  "Display time in logs ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",DATETIME,TIME,SECOND,MSECOND)");
    printf("\n\t    --%-15s %s",      "verbosecolor", "Use color for log messages");
    printf("\n\t-%s, --%-15s %s","h", "help",         "Help info");   
    printf("\n");
@@ -932,6 +963,11 @@ int App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags) {
             i++;
             if ((ner=ok=(i<argc && argv[i][0]!='-'))) {
                App_LogLevel(env?strtok(str," "):argv[i]);
+            }
+         } else if (!strcasecmp(tok,"--verbosetime")) {                                           // Verbose time type
+            i++;
+            if ((ner=ok=(i<argc && argv[i][0]!='-'))) {
+               App_LogTime(env?strtok(str," "):argv[i]);
             }
          } else if (!strcasecmp(tok,"--verbosecolor")) {                                          // Use color in log messages
             App->LogColor=TRUE;

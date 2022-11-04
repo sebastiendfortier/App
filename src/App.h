@@ -93,12 +93,12 @@
 #define APP_MAXONCE 1024
 
 typedef enum { APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4 } TApp_LogLevel;
+typedef enum { APP_NODATE=0,APP_DATETIME=1,APP_TIME=2,APP_SECOND=3,APP_MSECOND=4 } TApp_LogTime;
 typedef enum { APP_STOP,APP_RUN,APP_DONE } TApp_State;
 typedef enum { APP_NIL=0x0,APP_FLAG=0x01,APP_CHAR=0x02,APP_UINT32=0x04,APP_INT32=0x06,APP_UINT64=0x08,APP_INT64=0x0A,APP_FLOAT32=0x0C,APP_FLOAT64=0x0E } TApp_Type;
 typedef enum { APP_FR=0x0,APP_EN=0x01 } TApp_Lang;
 typedef enum { APP_OK=1,APP_ERR=0 } TApp_RetCode;
 typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2,APP_AFFINITY_SOCKET=3 } TApp_Affinity;
-typedef enum { APP_NODATE=0,APP_DATETIME=1,APP_TIME=2,APP_SECOND=3,APP_MSECOND=4 } TApp_Time;
 
 #define APP_ASRT_OK(x) if( (x)!=APP_OK ) return(APP_ERR)
 #define APP_ASRT_OK_M(Fct, ...) \
@@ -163,7 +163,7 @@ typedef struct TApp {
     int            LogWarning;           ///< Number of warnings
     int            LogError;             ///< Number of errors
     int            LogColor;             ///< Use coloring in the logs
-    TApp_Time      LogTime;              ///< Display time in the logs
+    TApp_LogTime   LogTime;              ///< Display time in the logs
     TApp_LogLevel  LogLevel;             ///< Level of log
     TApp_State     State;                ///< State of application
     TApp_Lang      Language;             ///< Language (default: $CMCLNG or APP_EN)
@@ -200,6 +200,7 @@ void  App_Log(TApp_LogLevel Level,const char *Format,...);
 void  App_LogOpen(void);
 void  App_LogClose(void);
 int   App_LogLevel(char *Val);
+int   App_LogTime(char *Val);
 void  App_Progress(float Percent,const char *Format,...);
 int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
 int   App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc);
