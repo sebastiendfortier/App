@@ -98,6 +98,7 @@ typedef enum { APP_NIL=0x0,APP_FLAG=0x01,APP_CHAR=0x02,APP_UINT32=0x04,APP_INT32
 typedef enum { APP_FR=0x0,APP_EN=0x01 } TApp_Lang;
 typedef enum { APP_OK=1,APP_ERR=0 } TApp_RetCode;
 typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2,APP_AFFINITY_SOCKET=3 } TApp_Affinity;
+typedef enum { APP_NODATE=0,APP_DATETIME=1,APP_ELAPSED=2 } TApp_Time;
 
 #define APP_ASRT_OK(x) if( (x)!=APP_OK ) return(APP_ERR)
 #define APP_ASRT_OK_M(Fct, ...) \
@@ -162,6 +163,7 @@ typedef struct TApp {
     int            LogWarning;           ///< Number of warnings
     int            LogError;             ///< Number of errors
     int            LogColor;             ///< Use coloring in the logs
+    TApp_Time      LogTime;              ///< Display time in the logs
     TApp_LogLevel  LogLevel;             ///< Level of log
     TApp_State     State;                ///< State of application
     TApp_Lang      Language;             ///< Language (default: $CMCLNG or APP_EN)

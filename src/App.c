@@ -51,8 +51,8 @@
 #include "str.h"
 #include "System.h"
 #ifdef HAVE_RMN
-   #include "rpnmacros.h"
    #include "rmn.h"
+   #include "rmn/rpnmacros.h"
 #endif
 
 static TApp AppInstance;                         ///< Static App instance
@@ -106,6 +106,7 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->LogWarning=0;
    App->LogError=0;
    App->LogColor=FALSE;
+   App->LogTime=FALSE;
    App->Tag=NULL;
    App->LogLevel=APP_INFO;
    App->State=APP_STOP;
@@ -595,10 +596,12 @@ void App_LogClose(void) {
 */
 void App_Log(TApp_LogLevel Level,const char *Format,...) {
 
-   static char *levels[] = { "ERROR","WARNING","INFO","DEBUG","EXTRA" };
-   static char *colors[] = { APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
-   char        *color;
-   va_list      args;
+   static char    *levels[] = { "ERROR","WARNING","INFO","DEBUG","EXTRA" };
+   static char    *colors[] = { APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
+   char           *color,time[32];
+   struct timeval now,diff;
+   struct tm      *lctm;
+   va_list         args;
 
    if (!App->LogStream)
       App_LogOpen();
@@ -618,21 +621,36 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
 
    if (Level<=App->LogLevel) {
       color=App->LogColor?colors[Level]:colors[APP_INFO];
-      
+
+      if (App->LogTime) {
+         gettimeofday(&now,NULL);
+
+         if (App->LogTime==APP_DATETIME) {
+            lctm=localtime(&now.tv_sec);
+            strftime(time,32,"%c ",lctm);
+         } else {
+            timersub(&now,&App->Time,&diff);
+            lctm=localtime(&diff.tv_sec);
+            strftime(time,32,"%T ",lctm);
+         }
+      } else {
+         time[0]='\0';
+      }
+
       if (Level>=0) {
 #ifdef HAVE_MPI
          if (App_IsMPI())
             if (App->Step) {
-               fprintf(App->LogStream,"%sP%03d (%s) #%d ",color,App->RankMPI,levels[Level],App->Step);
+               fprintf(App->LogStream,"%s%sP%03d (%s) #%d ",color,time,App->RankMPI,levels[Level],App->Step);
             } else {
-               fprintf(App->LogStream,"%sP%03d (%s) ",color,App->RankMPI,levels[Level]);
+               fprintf(App->LogStream,"%s%sP%03d (%s) ",color,time,App->RankMPI,levels[Level]);
             }
          else 
 #endif     
             if (App->Step) {
-               fprintf(App->LogStream,"%s(%s) #%d ",color,levels[Level],App->Step);
+               fprintf(App->LogStream,"%s%s(%s) #%d ",color,time,levels[Level],App->Step);
             } else {
-               fprintf(App->LogStream,"%s(%s) ",color,levels[Level]);
+               fprintf(App->LogStream,"%s%s(%s) ",color,time,levels[Level]);
             }
       }
       

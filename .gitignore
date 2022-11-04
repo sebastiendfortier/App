@@ -1,6 +1,7 @@
 #----- Compiled object/library files
 *.o
 *.a
+*.mod
 
 #----- Editor pattern
 *.sw[po]

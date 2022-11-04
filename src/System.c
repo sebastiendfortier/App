@@ -39,8 +39,8 @@
 #include "System.h"
 #include "App.h"
 #ifdef HAVE_RMN
-   #include "rpnmacros.h"
    #include "rmn.h"
+   #include "rmn/rpnmacros.h"
 #endif
 
 static char SYSTEM_STRING[256];
