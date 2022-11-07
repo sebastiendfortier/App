@@ -379,7 +379,6 @@ void App_Start(void) {
 #ifdef HAVE_RMN
       extern char rmn_version[];
       App_Log(APP_MUST,"Lib RMN        : %s\n",&rmn_version);
-
 #endif
 
       App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
