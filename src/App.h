@@ -44,6 +44,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <float.h>
+#include "App_Timer.h"
 
 #ifdef HAVE_OPENMP
 #   include <omp.h>
@@ -185,6 +186,8 @@ typedef struct TApp {
 #ifdef HAVE_MPI
     MPI_Comm       NodeComm,NodeHeadComm;///< Communicator for the current node and the head nodes
 #endif //HAVE_MPI
+
+   TApp_Timer     *TimerLog;             ///< Time spent on log printing
 } TApp;
 
 #ifndef APP_BUILD

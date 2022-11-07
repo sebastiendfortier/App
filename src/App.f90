@@ -45,16 +45,6 @@ interface
 
 !   void  App_Progress(float Percent,const char *Format,...);
 
-!   void  App_LogOpen(void);
-    SUBROUTINE app_logopen() BIND(C, name="App_LogOpen")
-        use, intrinsic :: iso_c_binding
-    end SUBROUTINE
-
-!   void  App_LogClose(void);
-    SUBROUTINE app_logclose() BIND(C, name="App_LogClose")
-        use, intrinsic :: iso_c_binding
-    end SUBROUTINE
-
 !   int   App_LogLevel(char *Val);
     integer(C_INT) FUNCTION app_loglevel(level) BIND(C, name="App_LogLevel")
         use, intrinsic :: iso_c_binding

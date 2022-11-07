@@ -151,6 +151,8 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
       App->Language=APP_EN;
    }
  
+   App->TimerLog = App_TimerCreate();
+
    return(App);
 }
 
@@ -495,7 +497,7 @@ int App_End(int Status) {
          App_Log(APP_MUST,"Trapped signal : %i\n",App->Signal);         
       }
       App_Log(APP_MUST,"Finish time    : (UTC) %s",ctime(&end.tv_sec));
-      App_Log(APP_MUST,"Execution time : %.4f seconds\n",(float)dif.tv_sec+dif.tv_usec/1000000.0);
+      App_Log(APP_MUST,"Execution time : %.4f seconds (%.2f ms logging)\n",(float)dif.tv_sec+dif.tv_usec/1000000.0,App_TimerTime_ms(App->TimerLog));
 
       
       if (Status!=EXIT_SUCCESS) {
@@ -631,6 +633,8 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
       Level&=0x7;
    }
    
+   App_TimerStart(App->TimerLog);
+
    if (Level==APP_WARNING) App->LogWarning++;
    if (Level==APP_ERROR)   App->LogError++;
 
@@ -696,6 +700,7 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
          fflush(App->LogStream);
       }
    }
+   App_TimerStop(App->TimerLog);
 }
 
 /**----------------------------------------------------------------------------
