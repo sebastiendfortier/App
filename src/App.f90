@@ -1,7 +1,12 @@
 module app
     use, intrinsic :: iso_c_binding
     implicit none
-interface
+
+    enum, bind(C) 
+       enumerator :: APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4,APP_QUIET=5
+    end enum
+    
+    interface
 
     ! 
     ! Bindings using C adapters
@@ -36,12 +41,12 @@ interface
     end FUNCTION
 
 !    void  App_Log(TApp_LogLevel Level,const char *Format,...);
-!    SUBROUTINE app_log(level,const char *Format,...)iris_model_finalize(iris) BIND(C, name="Iris_Model_Finalize")
-!        use, intrinsic :: iso_c_binding
-!        implicit none
-!        integer(C_INT), value :: level
-!        type(C_PTR), value :: iris
-!    end SUBROUTINE
+    SUBROUTINE app_log(level,msg) BIND(C, name="App_Log4Fortran")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer(C_INT), value :: level
+        character(C_CHAR), dimension(*) :: msg
+    end SUBROUTINE
 
 !   void  App_Progress(float Percent,const char *Format,...);
 
@@ -63,7 +68,6 @@ interface
         character(C_CHAR), dimension(*) :: value
         type(C_PTR), intent(out) :: var
     end FUNCTION
-
 
 !   int   App_ParseDate(char *Param,char *Value,time_t *Var);
     integer(C_INT) FUNCTION app_parsedate(param,value,var) BIND(C, name="App_ParseDate")

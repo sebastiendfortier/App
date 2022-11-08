@@ -151,8 +151,6 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
       App->Language=APP_EN;
    }
  
-   App->TimerLog = App_TimerCreate();
-
    return(App);
 }
 
@@ -610,6 +608,10 @@ void App_LogClose(void) {
  *   - le niveau ERROR s'affichera sur de stderr alors que tout les autres seront
  *     sur stdout ou le fichier log
 */
+void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
+   App_Log(Level,"%s",Message);
+}
+
 void App_Log(TApp_LogLevel Level,const char *Format,...) {
 
    static char    *levels[] = { "ERROR","WARNING","INFO","DEBUG","EXTRA" };
@@ -619,8 +621,13 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
    struct tm      *lctm;
    va_list         args;
 
-   if (!App->LogStream)
+   if (!App->LogStream) {
       App_LogOpen();
+
+      // Some initialisation for code not linking with App
+      App->TimerLog = App_TimerCreate();
+      if (!App->LogLevel) App->LogLevel=APP_INFO;
+   }
 
    // Check for once log flag
    if (Level>APP_EXTRA) {
