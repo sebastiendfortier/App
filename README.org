@@ -33,7 +33,7 @@ This packages manages various standard tasks needed by applications like:
 - OMP_NUM_THREADS  : Number of openMP threads
 
 ** Example code
-#+begin_src
+#+begin_src C
 int main(int argc,char **argv) {
 
    TIris    Iris;
