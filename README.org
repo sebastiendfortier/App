@@ -1,7 +1,25 @@
 Application management library and tools
 
 * Usage
-This packages manages various standard tasks needed by applications like argument parsing, logging, process signal trapping, and some parallel process management
+This packages manages various standard tasks needed by applications like:
+
+- Program arguments
+    - Parsing arguments
+    - Standard arguments pre-defined:
+#+begin_src
+        -l, --log             Log file (stdout,stderr,file)
+            --logsplit        Split log file per MPI rank
+        -v, --verbose         Verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA or 0-4)
+            --verbosetime     Display time in logs (NONE,DATETIME,TIME,SECOND,MSECOND)
+            --verbosecolor    Use color for log messages
+        -h, --help            Help info
+#+end_src
+
+    - Logging
+        Standard and uniform way of displying messages at various levels, with optional time information, time step number and color by message type. When using MPI, messages are prepended by the PE number. 
+    - Process signal trapping
+        You can define signal trapping functions but capability for stopping model on SIGUSR2 is already defined
+    - Some parallel process management
 
 ** Environment variables
 - APP_PARAMS       : List of parameters for the appliaction (instead of givins on command line) 

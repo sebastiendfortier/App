@@ -837,7 +837,7 @@ void App_PrintArgs(TApp_Arg *AArgs,char *Token,int Flags) {
    if (Flags&APP_ARGSLANG)   printf("\n\t-%s, --%-15s %s","a", "language","Language ("APP_COLOR_GREEN"$CMCLNG"APP_COLOR_RESET",english,francais)");
    
    printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA or 0-4)");
-   printf("\n\t-%s, --%-15s %s","v", "verbosetime",  "Display time in logs ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",DATETIME,TIME,SECOND,MSECOND)");
+   printf("\n\t    --%-15s %s",      "verbosetime",  "Display time in logs ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",DATETIME,TIME,SECOND,MSECOND)");
    printf("\n\t    --%-15s %s",      "verbosecolor", "Use color for log messages");
    printf("\n\t-%s, --%-15s %s","h", "help",         "Help info");   
    printf("\n");
