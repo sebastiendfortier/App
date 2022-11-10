@@ -6,6 +6,8 @@ module app
        enumerator :: APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4,APP_QUIET=5
     end enum
     
+    character (len=*) , parameter :: EOL = char(13)//char(11)
+
     interface
 
     ! 

@@ -77,6 +77,7 @@
 #define APP_BUFMAX    32768               ///< Maximum input buffer length
 #define APP_LISTMAX   4096                ///< Maximum number of items in a flag list
 #define APP_SEED      1049731793          ///< Initial FIXED seed
+#define APP_FTNSTRMAX 1024                ///< Maximum fortran message lenght
 
 #define APP_NOARGSFLAG 0x00               ///< No flag specified
 #define APP_NOARGSFAIL 0x01               ///< Fail if no arguments are specified

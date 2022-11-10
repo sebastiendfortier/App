@@ -13,28 +13,14 @@
  * Remarques :
  *    This package can uses the following environment variables if defined
  *       APP_PARAMS       : List of parameters for the appliaction (instead of givins on command line) 
- *       APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA or 0-4)
+ *       APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA or 0-4) default:INFO
  *       APP_VERBOSECOLOR : Use color in log messages
+ *       APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
+ *       APP_LOGSPLIT     : Split log stream/file per MPI PE
+ *       APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stdout
  * 
  *       CMCLNG           : Language tu use (francais,english)
  *       OMP_NUM_THREADS  : Number of openMP threads
- *
- * License      :
- *    This library is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation,
- *    version 2.1 of the License.
- *
- *    This library is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
- *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with this library; if not, write to the
- *    Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- *    Boston, MA 02111-1307, USA.
- *
  *==============================================================================
  */
 #define APP_BUILD
@@ -55,8 +41,8 @@
    #include "rmn/rpnmacros.h"
 #endif
 
-static TApp AppInstance;                         ///< Static App instance
-__thread TApp *App=&AppInstance;                 ///< Per thread App pointer
+static TApp AppInstance;                             ///< Static App instance
+__thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
 char* App_ErrorGet(void) {                       //< Return last error
@@ -142,6 +128,9 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    }
    if ((c=getenv("APP_LOGSPLIT"))) {
       App->LogSplit=TRUE;
+   }
+   if ((c=getenv("APP_LOGSTREAM"))) {
+      App->LogFile=strdup(c);
    }
    
    // Check the language in the environment 
@@ -303,7 +292,7 @@ int App_ThreadPlace(void) {
 */
 void App_Start(void) {
 
-   char rmn[128],*env=NULL;
+   char *env=NULL;
    int print=0,t,th,mpi;
 
    // Trap signals (preemption)
@@ -376,7 +365,7 @@ void App_Start(void) {
 
 #ifdef HAVE_RMN
       extern char rmn_version[];
-      App_Log(APP_MUST,"Lib RMN        : %s\n",&rmn_version);
+      App_Log(APP_MUST,"rmn version    : %s\n",&rmn_version);
 #endif
 
       App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
@@ -609,7 +598,17 @@ void App_LogClose(void) {
  *     sur stdout ou le fichier log
 */
 void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
-   App_Log(Level,"%s",Message);
+
+  char *s;
+
+   if (Message) {
+      // trim blanks
+      s=(char *)Message+strlen(Message);
+      while(*--s==' ')
+         *s='\0';
+
+      App_Log(Level,"%s\n",Message);
+   }
 }
 
 void App_Log(TApp_LogLevel Level,const char *Format,...) {

@@ -1,5 +1,77 @@
 Application management library and tools
 
+* Usage
+This packages manages various standard tasks needed by applications like argument parsing, logging, process signal trapping, and some parallel process management
+
+** Environment variables
+- APP_PARAMS       : List of parameters for the appliaction (instead of givins on command line) 
+- APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA or 0-4) default:INFO
+- APP_VERBOSECOLOR : Use color in log messages
+- APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
+- APP_LOGSPLIT     : Split log stream/file per MPI PE
+- APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stdout
+  
+- CMCLNG           : Language tu use (francais,english)
+- OMP_NUM_THREADS  : Number of openMP threads
+
+** Example code
+#+begin_src
+int main(int argc,char **argv) {
+
+   TIris    Iris;
+   MPI_Comm comm;
+
+   int   ok=0,code=0,timestep=0,s;
+   char *gridfile=NULL;
+
+   TApp_Arg appargs[]=
+      { { APP_CHAR,  &gridfile, 1,             "g", "grid", "Input data fields" },
+        { APP_NIL } };
+
+   MPI_Init(&argc,&argv);
+
+   App_Init(APP_MASTER,MODEL_NAME,VERSION,PROJECT_DESCRIPTION_STRING,BUILD_TIMESTAMP);
+   if (!App_ParseArgs(appargs,argc,argv,APP_NOARGSFAIL|APP_ARGSLOG)) {
+      code=EXIT_FAILURE;      
+   }
+
+   if (!gridfile) {
+      App_Log(APP_ERROR,"No input standard file specified\n");
+      exit(EXIT_FAILURE);
+   }
+
+   if (!code) {
+      App_Start();
+ 
+      comm=Iris_Init(&Iris,0,NULL);
+      
+      Model_Init(&Iris,gridfile);
+      for(App->Step=1;App->Step<20;App->Step++) {
+
+         if (App_IsDone()) {
+            // Trapped premption signal
+            break; 
+         }
+         Model_Run(&Iris, ++timestep, comm);
+      }
+
+      if (App_IsDone() && Iris.Rank==0) {
+         App_Log(APP_WARNING,"MDL%d: Would be writing a restart here\n",Iris.ModelNo);
+      }
+
+      Iris_Model_Finalize(&Iris);
+      code=App_End(ok?-1:EXIT_FAILURE);
+   }
+   if (Iris.Rank==0)
+     cs_fstfrm(OutFID);
+
+   App_Free();
+
+   MPI_Finalize();
+}
+#+end_src
+
+
 * Build dependencies
 
 - CMake 3.21+
