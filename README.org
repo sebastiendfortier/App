@@ -16,7 +16,11 @@ This packages manages various standard tasks needed by applications like:
 #+end_src
 
     - Logging
-        Standard and uniform way of displying messages at various levels, with optional time information, time step number and color by message type. When using MPI, messages are prepended by the PE number. 
+        - Standard and uniform way of displaying messages at various levels
+        - Manages dependent libraries if they also use this mecanism (App_Log)
+        - Optional time information, time step number and color by message type
+        - When using MPI, messages are prepended by the PE number
+        - Shows count of error and warnings at end/close of log
     - Process signal trapping
         You can define signal trapping functions but capability for stopping model on SIGUSR2 is already defined
     - Some parallel process management
@@ -31,6 +35,27 @@ This packages manages various standard tasks needed by applications like:
   
 - CMCLNG           : Language tu use (francais,english)
 - OMP_NUM_THREADS  : Number of openMP threads
+
+** Example output log
+#+begin_src
+-------------------------------------------------------------------------------------
+Application    : Interpolate 0.1.0 (2022-11-08T12:31:34Z)
+Lib RMN        : 20.0.0-alpha3-2-g1f0543f-dirty
+
+Start time     : (UTC) Thu Nov 10 22:25:50 2022
+-------------------------------------------------------------------------------------
+
+(ERROR) W grid support not enabled, needs to be built with GDAL
+(INFO) Processing TT 2049
+(DEBUG) GeoRef_SetGet: RefFrom : 0x122c200 RefTo: 0x1215760
+(ERROR) Def_GridInterp: Invalid destination
+(ERROR) Interpolate: EZSCINT interpolation problem
+-------------------------------------------------------------------------------------
+Finish time    : (UTC) Thu Nov 10 22:25:50 2022
+Execution time : 0.0539 seconds (0.03 ms logging)
+Status         : Error 1 (3 Errors)
+-------------------------------------------------------------------------------------
+#+end_src
 
 ** Example code
 #+begin_src C
