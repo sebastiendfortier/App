@@ -761,21 +761,23 @@ void App_Progress(float Percent,const char *Format,...) {
  */
 int App_LogLevel(char *Val) {
 
-   if (Val) {
-      if (strcasecmp(Val,"ERROR")==0) {
+   char *endptr=NULL;
+   
+   if (Val && strlen(Val)) {
+      if (strncasecmp(Val,"ERROR",5)==0) {
          App->LogLevel=0;
-      } else if (strcasecmp(Val,"WARNING")==0) {
+      } else if (strncasecmp(Val,"WARNING",7)==0) {
          App->LogLevel=APP_WARNING;
-      } else if (strcasecmp(Val,"INFO")==0) {
+      } else if (strncasecmp(Val,"INFO",5)==0) {
          App->LogLevel=APP_INFO;
-      } else if (strcasecmp(Val,"DEBUG")==0) {
+      } else if (strncasecmp(Val,"DEBUG",5)==0) {
          App->LogLevel=APP_DEBUG;
-      } else if (strcasecmp(Val,"EXTRA")==0) {
+      } else if (strncasecmp(Val,"EXTRA",5)==0) {
          App->LogLevel=APP_EXTRA;
-      } else if (strcasecmp(Val,"QUIET")==0) {
+      } else if (strncasecmp(Val,"QUIET",5)==0) {
          App->LogLevel=APP_QUIET;
       } else {
-         App->LogLevel=(TApp_LogLevel)atoi(Val);
+         App->LogLevel=strtoul(Val,&endptr,10);
       }
    }
    return(App->LogLevel);
