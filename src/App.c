@@ -13,7 +13,7 @@
  * Remarques :
  *    This package can uses the following environment variables if defined
  *       APP_PARAMS       : List of parameters for the appliaction (instead of givins on command line) 
- *       APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA or 0-4) default:INFO
+ *       APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA,QUIET or 0-5) default:INFO
  *       APP_VERBOSECOLOR : Use color in log messages
  *       APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
  *       APP_LOGSPLIT     : Split log stream/file per MPI PE
