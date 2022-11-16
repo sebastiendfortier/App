@@ -63,6 +63,13 @@ int App_MPIProcCmp(const void *a,const void *b) {
 }
 #endif
 
+void App_LibList(char *Lib,char *Version) {
+   App->Libs[App->LibsNb]=strdup(Lib);
+   App->LibsVersion[App->LibsNb]=strdup(Version);
+   App->LibsNb++;
+}
+
+
 /**----------------------------------------------------------------------------
  * @brief  Initialiser la structure App
  * @author Jean-Philippe Gauthier
@@ -110,6 +117,7 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->OMPSeed=NULL;
    App->Seed=time(NULL);
    App->Signal=0;
+   App->LibsNb=0;
 
 #ifdef HAVE_MPI
    App->NodeComm=MPI_COMM_NULL;
@@ -365,8 +373,11 @@ void App_Start(void) {
 
 #ifdef HAVE_RMN
       extern char rmn_version[];
-      App_Log(APP_MUST,"rmn version    : %s\n",&rmn_version);
+      App_Log(APP_MUST,"rmn            : %s\n",&rmn_version);
 #endif
+      for(t=0;t<App->LibsNb;t++) {
+         App_Log(APP_MUST,"%-15s: %s\n",App->Libs[t],App->LibsVersion[t]);
+      }
 
       App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
 
@@ -643,7 +654,7 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
    if (Level==APP_WARNING) App->LogWarning++;
    if (Level==APP_ERROR)   App->LogError++;
 
-   if (Level<=App->LogLevel) {
+   if (Level<=App->LogLevel && (App->LogLevel!=APP_QUIET && Level!=APP_ERROR)) {
       color=App->LogColor?colors[Level]:colors[APP_INFO];
 
       if (App->LogTime) {
@@ -754,13 +765,15 @@ int App_LogLevel(char *Val) {
       if (strcasecmp(Val,"ERROR")==0) {
          App->LogLevel=0;
       } else if (strcasecmp(Val,"WARNING")==0) {
-         App->LogLevel=1;
+         App->LogLevel=APP_WARNING;
       } else if (strcasecmp(Val,"INFO")==0) {
-         App->LogLevel=2;
+         App->LogLevel=APP_INFO;
       } else if (strcasecmp(Val,"DEBUG")==0) {
-         App->LogLevel=3;
+         App->LogLevel=APP_DEBUG;
       } else if (strcasecmp(Val,"EXTRA")==0) {
-         App->LogLevel=4;
+         App->LogLevel=APP_EXTRA;
+      } else if (strcasecmp(Val,"QUIET")==0) {
+         App->LogLevel=APP_QUIET;
       } else {
          App->LogLevel=(TApp_LogLevel)atoi(Val);
       }

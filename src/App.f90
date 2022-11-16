@@ -6,7 +6,9 @@ module app
        enumerator :: APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4,APP_QUIET=5
     end enum
     
+    type(C_PTR) :: app_ptr
     character (len=*) , parameter :: EOL = char(13)//char(11)
+    character(len=1024) :: app_msg  !String to write output messages     
 
     interface
 
@@ -28,6 +30,14 @@ module app
 !   void  App_Free(void);
     SUBROUTINE app_free() BIND(C, name="App_Free")
         use, intrinsic :: iso_c_binding
+    end SUBROUTINE
+
+!   void App_LibList(char *Lib,char *Version) {
+    SUBROUTINE app_liblist(name,version) BIND(C, name="App_LibList")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        character(C_CHAR), dimension(*) :: name
+        character(C_CHAR), dimension(*) :: version
     end SUBROUTINE
 
 !   void  App_Start(void);

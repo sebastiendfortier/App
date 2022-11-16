@@ -77,7 +77,8 @@
 #define APP_BUFMAX    32768               ///< Maximum input buffer length
 #define APP_LISTMAX   4096                ///< Maximum number of items in a flag list
 #define APP_SEED      1049731793          ///< Initial FIXED seed
-#define APP_FTNSTRMAX 1024                ///< Maximum fortran message lenght
+#define APP_FTNSTRMAX 1024                ///< Maximum fortran message length
+#define APP_LIBSMAX   256                 ///< Maximum number of libraries
 
 #define APP_NOARGSFLAG 0x00               ///< No flag specified
 #define APP_NOARGSFAIL 0x01               ///< Fail if no arguments are specified
@@ -174,6 +175,10 @@ typedef struct TApp {
     struct timeval Time;                 ///< Timer for execution time
     int            Type;                 ///< App object type (APP_MASTER,APP_THREAD)
     int            Step;                 ///< Model step
+
+    char*          Libs[APP_LIBSMAX];
+    char*          LibsVersion[APP_LIBSMAX];
+    int            LibsNb;
 
     int            Seed,*OMPSeed;        ///< Random number generator seed
     int           *TotalsMPI;            ///< MPI total number of items arrays

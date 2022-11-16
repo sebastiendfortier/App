@@ -22,7 +22,7 @@ This packages manages various standard tasks needed by applications like:
         - When using MPI, messages are prepended by the PE number
         - Shows count of error and warnings at end/close of log
     - Process signal trapping
-        You can define signal trapping functions but capability for stopping model on SIGUSR2 is already defined
+        - Signal trapping for stopping model on SIGUSR2/SIGTERM
     - Some parallel process management
 
 ** Environment variables
