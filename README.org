@@ -26,15 +26,15 @@ This packages manages various standard tasks needed by applications like:
     - Some parallel process management
 
 ** Environment variables
-- APP_PARAMS       : List of parameters for the appliaction (instead of givins on command line) 
+- APP_PARAMS       : List of parameters for the application (instead of giving on command line) 
 - APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA,QUIET or 0-5) default:INFO
 - APP_VERBOSECOLOR : Use color in log messages
 - APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
 - APP_LOGSPLIT     : Split log stream/file per MPI PE
 - APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stdout
   
-- CMCLNG           : Language tu use (francais,english)
-- OMP_NUM_THREADS  : Number of openMP threads
+- CMCLNG           : Language to use (francais,english)
+- OMP_NUM_THREADS  : Number of openMP threads (for internal purposes)
 
 ** Example output log
 #+begin_src

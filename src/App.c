@@ -371,12 +371,13 @@ void App_Start(void) {
       App_Log(APP_MUST,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
 //      App_Log(APP_MUST,"libApp         : %s\n",PROJECT_VERSION_STRING);
 
+      App_Log(APP_MUST,"Libraries      :\n");
 #ifdef HAVE_RMN
       extern char rmn_version[];
-      App_Log(APP_MUST,"rmn            : %s\n",&rmn_version);
+      App_Log(APP_MUST,"   %-12s: %s\n","rmn",&rmn_version);
 #endif
       for(t=0;t<App->LibsNb;t++) {
-         App_Log(APP_MUST,"%-15s: %s\n",App->Libs[t],App->LibsVersion[t]);
+         App_Log(APP_MUST,"   %-12s: %s\n",App->Libs[t],App->LibsVersion[t]);
       }
 
       App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
