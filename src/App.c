@@ -654,7 +654,7 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
    if (Level==APP_WARNING) App->LogWarning++;
    if (Level==APP_ERROR)   App->LogError++;
 
-   if (Level<=App->LogLevel && (App->LogLevel!=APP_QUIET && Level!=APP_ERROR)) {
+   if (Level<=App->LogLevel && (App->LogLevel!=APP_QUIET || Level==APP_ERROR)) {
       color=App->LogColor?colors[Level]:colors[APP_INFO];
 
       if (App->LogTime) {
