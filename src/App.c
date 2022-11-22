@@ -94,7 +94,7 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->Version=Version?strdup(Version):NULL;
    App->Desc=Desc?strdup(Desc):NULL;
    App->TimeStamp=Stamp?strdup(Stamp):NULL;
-   App->LogFile=strdup("stdout");
+   App->LogFile=strdup("stderr");
    App->LogStream=(FILE*)NULL;
    App->LogWarning=0;
    App->LogError=0;

@@ -31,7 +31,7 @@ This packages manages various standard tasks needed by applications like:
 - APP_VERBOSECOLOR : Use color in log messages
 - APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
 - APP_LOGSPLIT     : Split log stream/file per MPI PE
-- APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stdout
+- APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stderr
   
 - CMCLNG           : Language to use (francais,english)
 - OMP_NUM_THREADS  : Number of openMP threads (for internal purposes)
