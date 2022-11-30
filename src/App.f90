@@ -60,7 +60,16 @@ module app
         character(C_CHAR), dimension(*) :: msg
     end SUBROUTINE
 
-!   void  App_Progress(float Percent,const char *Format,...);
+    !    void  App_LogFrom(TApp_LogLevel Level,const char *Format,...);
+    SUBROUTINE app_logfrom(level,lib,msg) BIND(C, name="App_LogFrom4Fortran")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer(C_INT), value :: level
+        integer(C_INT), value :: lib
+        character(C_CHAR), dimension(*) :: msg
+    end SUBROUTINE
+    
+    !   void  App_Progress(float Percent,const char *Format,...);
 
 !   int   App_LogLevel(char *Val);
     integer(C_INT) FUNCTION app_loglevel(level) BIND(C, name="App_LogLevel")

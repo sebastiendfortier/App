@@ -85,15 +85,17 @@ void App_LibList(char *Lib,char *Version) {
 TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
 
    char *c;
+   int  l;
    
    // In coprocess threaded mode, we need a different App object than the master thread
    App=(Type==APP_THREAD)?(TApp*)malloc(sizeof(TApp)):&AppInstance;
- 
+
    App->Type=Type;
-   App->Name=Name?strdup(Name):NULL;
-   App->Version=Version?strdup(Version):NULL;
-   App->Desc=Desc?strdup(Desc):NULL;
-   App->TimeStamp=Stamp?strdup(Stamp):NULL;
+   App->Name=Name?strdup(Name):strdup("");
+   App->Version=Version?strdup(Version):strdup("");
+   App->Desc=Desc?strdup(Desc):strdup("");
+   App->TimeStamp=Stamp?strdup(Stamp):strdup("");
+   App->Language=APP_EN;
    App->LogFile=strdup("stderr");
    App->LogStream=(FILE*)NULL;
    App->LogWarning=0;
@@ -102,7 +104,6 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->LogTime=FALSE;
    App->LogSplit=FALSE;
    App->Tag=NULL;
-   App->LogLevel=APP_INFO;
    App->State=APP_STOP;
    App->Percent=0.0;
    App->Step=0;
@@ -118,6 +119,9 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->Seed=time(NULL);
    App->Signal=0;
    App->LibsNb=0;
+   App->TimerLog=App_TimerCreate();
+
+   for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_INFO;
 
 #ifdef HAVE_MPI
    App->NodeComm=MPI_COMM_NULL;
@@ -144,8 +148,6 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    // Check the language in the environment 
    if ((c=getenv("CMCLNG"))) {
       App->Language=(c[0]=='f' || c[0]=='F')?APP_FR:APP_EN;
-   } else {
-      App->Language=APP_EN;
    }
  
    return(App);
@@ -572,13 +574,13 @@ void App_LogOpen(void) {
          App->LogStream=stdout;
          fprintf(stderr,"(WARNING) Unable to open log stream (%s), will use stdout instead\n",App->LogFile);
       }
-   }
 
-   // Split log file per MPI rank
-   char file[4096];
-   if (App->LogSplit && App_IsMPI()) {
-      snprintf(file,4096,"%s.%06d",App->LogFile,App->RankMPI);
-      App->LogStream=freopen(file,"a",App->LogStream);
+      // Split log file per MPI rank
+      char file[4096];
+      if (App->LogSplit && App_IsMPI()) {
+         snprintf(file,4096,"%s.%06d",App->LogFile,App->RankMPI);
+         App->LogStream=freopen(file,"a",App->LogStream);
+      }
    }
 }
 
@@ -589,7 +591,7 @@ void App_LogOpen(void) {
 */
 void App_LogClose(void) {
 
-   if (App->LogStream!=stdout && App->LogStream!=stderr) {
+   if (App->LogStream && App->LogStream!=stdout && App->LogStream!=stderr) {
       fclose(App->LogStream);
    }
 }
@@ -619,16 +621,32 @@ void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
       while(*--s==' ')
          *s='\0';
 
-      App_Log(Level,"%s\n",Message);
+      App_LogFrom(Level,APP_MAIN,"%s\n",Message);
    }
 }
 
-void App_Log(TApp_LogLevel Level,const char *Format,...) {
+void App_LogFrom4Fortran(TApp_LogLevel Level,TApp_Lib Lib,const char *Message) {
 
-   static char    *levels[] = { "ERROR","WARNING","INFO","DEBUG","EXTRA" };
-   static char    *colors[] = { APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
+  char *s;
+
+   if (Message) {
+      // trim blanks
+      s=(char *)Message+strlen(Message);
+      while(*--s==' ')
+         *s='\0';
+
+      App_LogFrom(Level,Lib,"%s\n",Message);
+   }
+}
+
+void App_LogFrom(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
+
+   static char    *levels[] = { "FATAL","ERROR","WARNING","INFO","DEBUG","EXTRA" };
+   static char    *colors[] = { APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
+   static char    *libs[]   = { "","RMN:","VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:" };
    char           *color,time[32];
-   struct timeval now,diff;
+   int             l;
+   struct timeval  now,diff;
    struct tm      *lctm;
    va_list         args;
 
@@ -637,11 +655,12 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
 
       // Some initialisation for code not linking with App
       App->TimerLog = App_TimerCreate();
-      if (!App->LogLevel) App->LogLevel=APP_INFO;
-   }
+      if (!App->LogLevel[0]) 
+          for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_INFO;
+  }
 
    // Check for once log flag
-   if (Level>APP_EXTRA) {
+   if (Level>APP_QUIET) {
       // If we logged it at least once
       if (Level>>3<APP_MAXONCE && App_OnceTable[Level>>3]++)
          return;
@@ -652,51 +671,56 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
    
    App_TimerStart(App->TimerLog);
 
-   if (Level==APP_WARNING) App->LogWarning++;
-   if (Level==APP_ERROR)   App->LogError++;
+   if (Level==APP_WARNING)                   App->LogWarning++;
+   if (Level==APP_ERROR || Level==APP_FATAL) App->LogError++;
 
-   if (Level<=App->LogLevel && (App->LogLevel!=APP_QUIET || Level==APP_ERROR)) {
-      color=App->LogColor?colors[Level]:colors[APP_INFO];
+   // Check if requested level is quiet and this is not an error
+   if (App->LogLevel[Lib]==APP_QUIET && Level!=APP_ERROR && Level!=APP_FATAL) return;
 
-      if (App->LogTime) {
-         gettimeofday(&now,NULL);
-
-         switch(App->LogTime) {
-            case APP_DATETIME:
-               lctm=localtime(&now.tv_sec);
-               strftime(time,32,"%c ",lctm);
-               break;
-            case APP_TIME:
-               timersub(&now,&App->Time,&diff);
-               lctm=localtime(&diff.tv_sec);
-               strftime(time,32,"%T ",lctm);
-               break;
-            case APP_SECOND:
-               timersub(&now,&App->Time,&diff);
-               snprintf(time,32,"%-8.3f ",diff.tv_sec+diff.tv_usec/1000000.0);
-               break;
-            case APP_MSECOND:
-               timersub(&now,&App->Time,&diff);
-               snprintf(time,32,"%-8li ",diff.tv_sec*1000+diff.tv_usec/1000);
-         }
-      } else {
-         time[0]='\0';
-      }
+   // If this is within the request level
+   if (Level<=App->LogLevel[Lib]) {
 
       if (Level>=0) {
+         color=App->LogColor?colors[Level]:colors[APP_INFO];
+
+         if (App->LogTime) {
+            gettimeofday(&now,NULL);
+
+            switch(App->LogTime) {
+               case APP_DATETIME:
+                  lctm=localtime(&now.tv_sec);
+                  strftime(time,32,"%c ",lctm);
+                  break;
+               case APP_TIME:
+                  timersub(&now,&App->Time,&diff);
+                  lctm=localtime(&diff.tv_sec);
+                  strftime(time,32,"%T ",lctm);
+                  break;
+               case APP_SECOND:
+                  timersub(&now,&App->Time,&diff);
+                  snprintf(time,32,"%-8.3f ",diff.tv_sec+diff.tv_usec/1000000.0);
+                  break;
+               case APP_MSECOND:
+                  timersub(&now,&App->Time,&diff);
+                  snprintf(time,32,"%-8li ",diff.tv_sec*1000+diff.tv_usec/1000);
+            }
+         } else {
+            time[0]='\0';
+         }
+
 #ifdef HAVE_MPI
          if (App_IsMPI())
             if (App->Step) {
-               fprintf(App->LogStream,"%s%sP%03d (%s) #%d ",color,time,App->RankMPI,levels[Level],App->Step);
+               fprintf(App->LogStream,"%s%sP%03d (%s) #%d %s",color,time,App->RankMPI,levels[Level],App->Step,libs[Lib]);
             } else {
-               fprintf(App->LogStream,"%s%sP%03d (%s) ",color,time,App->RankMPI,levels[Level]);
+               fprintf(App->LogStream,"%s%sP%03d (%s) %s",color,time,App->RankMPI,levels[Level],libs[Lib]);
             }
          else 
 #endif     
             if (App->Step) {
-               fprintf(App->LogStream,"%s%s(%s) #%d ",color,time,levels[Level],App->Step);
+               fprintf(App->LogStream,"%s%s(%s) #%d %s",color,time,levels[Level],App->Step,libs[Lib]);
             } else {
-               fprintf(App->LogStream,"%s%s(%s) ",color,time,levels[Level]);
+               fprintf(App->LogStream,"%s%s(%s) %s",color,time,levels[Level],libs[Lib]);
             }
       }
       
@@ -707,7 +731,7 @@ void App_Log(TApp_LogLevel Level,const char *Format,...) {
       if (App->LogColor)
          fprintf(App->LogStream,APP_COLOR_RESET);
       
-      if (Level==APP_ERROR) {
+      if (Level==APP_ERROR || Level==APP_FATAL) {
          // On errors, save for extenal to use (ex: Tcl)
          va_start(args,Format);
          vsnprintf(APP_LASTERROR,APP_ERRORSIZE,Format,args);
@@ -763,25 +787,27 @@ void App_Progress(float Percent,const char *Format,...) {
 int App_LogLevel(char *Val) {
 
    char *endptr=NULL;
+   int  l;
    
    if (Val && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
-         App->LogLevel=0;
-      } else if (strncasecmp(Val,"WARNING",7)==0) {
-         App->LogLevel=APP_WARNING;
+         App->LogLevel[0]=0;
+      } else if (strncasecmp(Val,"WARN",4)==0) {
+         App->LogLevel[0]=APP_WARNING;
       } else if (strncasecmp(Val,"INFO",5)==0) {
-         App->LogLevel=APP_INFO;
+         App->LogLevel[0]=APP_INFO;
       } else if (strncasecmp(Val,"DEBUG",5)==0) {
-         App->LogLevel=APP_DEBUG;
+         App->LogLevel[0]=APP_DEBUG;
       } else if (strncasecmp(Val,"EXTRA",5)==0) {
-         App->LogLevel=APP_EXTRA;
+         App->LogLevel[0]=APP_EXTRA;
       } else if (strncasecmp(Val,"QUIET",5)==0) {
-         App->LogLevel=APP_QUIET;
+         App->LogLevel[0]=APP_QUIET;
       } else {
-         App->LogLevel=strtoul(Val,&endptr,10);
+         App->LogLevel[0]=strtoul(Val,&endptr,10);
       }
+      for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[0];
    }
-   return(App->LogLevel);
+   return(App->LogLevel[0]);
 }
 
 /**----------------------------------------------------------------------------
@@ -848,11 +874,11 @@ void App_PrintArgs(TApp_Arg *AArgs,char *Token,int Flags) {
    if (Flags&APP_ARGSTHREAD) printf("\n\t    --%-15s %s", "affinity",     "Thread affinity ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",COMPACT,SCATTER,SOCKET)");
    
    printf("\n");
-   if (Flags&APP_ARGSLOG)    printf("\n\t-%s, --%-15s %s","l", "log",     "Log file ("APP_COLOR_GREEN"stdout"APP_COLOR_RESET",stderr,file)");
+   if (Flags&APP_ARGSLOG)    printf("\n\t-%s, --%-15s %s","l", "log",     "Log file (stdout,"APP_COLOR_GREEN"stderr"APP_COLOR_RESET",file)");
    if (Flags&APP_ARGSLOG)    printf("\n\t    --%-15s %s",      "logsplit","Split log file per MPI rank");
    if (Flags&APP_ARGSLANG)   printf("\n\t-%s, --%-15s %s","a", "language","Language ("APP_COLOR_GREEN"$CMCLNG"APP_COLOR_RESET",english,francais)");
    
-   printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA or 0-4)");
+   printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA,QUIET or 1-6)");
    printf("\n\t    --%-15s %s",      "verbosetime",  "Display time in logs ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",DATETIME,TIME,SECOND,MSECOND)");
    printf("\n\t    --%-15s %s",      "verbosecolor", "Use color for log messages");
    printf("\n\t-%s, --%-15s %s","h", "help",         "Help info");   

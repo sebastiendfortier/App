@@ -95,7 +95,8 @@
 #endif
 #define APP_MAXONCE 1024
 
-typedef enum { APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4,APP_QUIET=5 } TApp_LogLevel;
+typedef enum { APP_MAIN=0,APP_LIBRMN=1,APP_LIBVGRID=2,APP_LIBINTERPV=3,APP_LIBGEOREF=4,APP_LIBRPNMPI=5,APP_LIBIRIS=6  } TApp_Lib;
+typedef enum { APP_MUST=-1,APP_FATAL=0,APP_ERROR=1,APP_WARNING=2,APP_INFO=3,APP_DEBUG=4,APP_EXTRA=5,APP_QUIET=6 } TApp_LogLevel;
 typedef enum { APP_NODATE=0,APP_DATETIME=1,APP_TIME=2,APP_SECOND=3,APP_MSECOND=4 } TApp_LogTime;
 typedef enum { APP_STOP,APP_RUN,APP_DONE } TApp_State;
 typedef enum { APP_NIL=0x0,APP_FLAG=0x01,APP_CHAR=0x02,APP_UINT32=0x04,APP_INT32=0x06,APP_UINT64=0x08,APP_INT64=0x0A,APP_FLOAT32=0x0C,APP_FLOAT64=0x0E } TApp_Type;
@@ -103,28 +104,30 @@ typedef enum { APP_FR=0x0,APP_EN=0x01 } TApp_Lang;
 typedef enum { APP_OK=1,APP_ERR=0 } TApp_RetCode;
 typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2,APP_AFFINITY_SOCKET=3 } TApp_Affinity;
 
+#define App_Log(LEVEL, ...) App_LogFrom(LEVEL,APP_MAIN,__VA_ARGS__)
+
 #define APP_ASRT_OK(x) if( (x)!=APP_OK ) return(APP_ERR)
 #define APP_ASRT_OK_M(Fct, ...) \
    if( (Fct)!=APP_OK ) { \
-      App_Log(APP_ERROR, __VA_ARGS__); \
+      App_LogFrom(APP_ERROR,APP_MAIN, __VA_ARGS__); \
       return(APP_ERR); \
    }
 
 // Check FST function and return the specified value if an error was encountered
 #define APP_FST_ASRT_H(Fct, ...) \
    if( (Fct) < 0 ) { \
-      App_Log(APP_ERROR, __VA_ARGS__); \
+      App_LogFrom(APP_ERROR,APP_MAIN, __VA_ARGS__); \
       return(APP_ERR); \
    }
 #define APP_FST_ASRT(Fct, ...) \
    if( (Fct) != 0 ) { \
-      App_Log(APP_ERROR, __VA_ARGS__); \
+      App_LogFrom(APP_ERROR,APP_MAIN, __VA_ARGS__); \
       return(APP_ERR); \
    }
 // Memory helpers
 #define APP_MEM_ASRT(Buf,Fct) \
    if( !(Buf=(Fct)) ) { \
-      App_Log(APP_ERROR,"(%s) Could not allocate memory for field %s at line %d.\n",__func__,#Buf,__LINE__); \
+      App_LogFrom(APP_ERROR,APP_MAIN,"(%s) Could not allocate memory for field %s at line %d.\n",__func__,#Buf,__LINE__); \
       return(APP_ERR); \
    }
 #define APP_FREE(Ptr) if(Ptr) { free(Ptr); Ptr=NULL; }
@@ -133,14 +136,14 @@ typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2
 #define APP_MPI_ASRT(Fct) { \
    int err = (Fct); \
    if( err!=MPI_SUCCESS ) { \
-      App_Log(APP_ERROR,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
+      App_LogFrom(APP_ERROR,APP_MAIN,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
       return(APP_ERR); \
    } \
 }
 #define APP_MPI_CHK(Fct) { \
    int err = (Fct); \
    if( err!=MPI_SUCCESS ) { \
-      App_Log(APP_ERROR,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
+      App_LogFrom(APP_ERROR,APP_MAIN,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
    } \
 }
 #endif //HAVE_MPI
@@ -155,40 +158,40 @@ typedef struct TApp_Arg {
 
 // Application controller definition
 typedef struct TApp {
-    char*          Name;                 ///< Name of applicaton
-    char*          Version;              ///< Version of application
-    char*          Desc;                 ///< Description of application
-    char*          TimeStamp;            ///< Compilation timestamp
-    char*          LogFile;              ///< Log file
-    int            LogSplit;             ///< Split the log file per MPI rank path
+    char*          Name;                  ///< Name of applicaton
+    char*          Version;               ///< Version of application
+    char*          Desc;                  ///< Description of application
+    char*          TimeStamp;             ///< Compilation timestamp
+    char*          LogFile;               ///< Log file
+    int            LogSplit;              ///< Split the log file per MPI rank path
 //    char*          TmpDir;               ///< Tmp directory
-    char*          Tag;                  ///< Identificateur
-    FILE*          LogStream;            ///< Log file associated stream
-    int            LogWarning;           ///< Number of warnings
-    int            LogError;             ///< Number of errors
-    int            LogColor;             ///< Use coloring in the logs
-    TApp_LogTime   LogTime;              ///< Display time in the logs
-    TApp_LogLevel  LogLevel;             ///< Level of log
-    TApp_State     State;                ///< State of application
-    TApp_Lang      Language;             ///< Language (default: $CMCLNG or APP_EN)
-    double         Percent;              ///< Percentage of execution done (0=not started, 100=finished)
-    struct timeval Time;                 ///< Timer for execution time
-    int            Type;                 ///< App object type (APP_MASTER,APP_THREAD)
-    int            Step;                 ///< Model step
+    char*          Tag;                   ///< Identificateur
+    FILE*          LogStream;             ///< Log file associated stream
+    int            LogWarning;            ///< Number of warnings
+    int            LogError;              ///< Number of errors
+    int            LogColor;              ///< Use coloring in the logs
+    TApp_LogTime   LogTime;               ///< Display time in the logs
+    TApp_LogLevel  LogLevel[APP_LIBSMAX]; ///< Level of log
+    TApp_State     State;                 ///< State of application
+    TApp_Lang      Language;              ///< Language (default: $CMCLNG or APP_EN)
+    double         Percent;               ///< Percentage of execution done (0=not started, 100=finished)
+    struct timeval Time;                  ///< Timer for execution time
+    int            Type;                  ///< App object type (APP_MASTER,APP_THREAD)
+    int            Step;                  ///< Model step
 
     char*          Libs[APP_LIBSMAX];
     char*          LibsVersion[APP_LIBSMAX];
     int            LibsNb;
 
-    int            Seed,*OMPSeed;        ///< Random number generator seed
-    int           *TotalsMPI;            ///< MPI total number of items arrays
-    int           *CountsMPI;            ///< MPI count gathering arrays
-    int           *DisplsMPI;            ///< MPI displacement gathering arrays
-    int            NbMPI,RankMPI;        ///< Number of MPI process
-    int            NbThread;             ///< Number of OpenMP threads
-    int            Signal;               ///< Trapped signal
-    TApp_Affinity  Affinity;             ///< Thread placement affinity
-    int            NbNodeMPI,NodeRankMPI;///< Number of MPI process on the current node
+    int            Seed,*OMPSeed;         ///< Random number generator seed
+    int           *TotalsMPI;             ///< MPI total number of items arrays
+    int           *CountsMPI;             ///< MPI count gathering arrays
+    int           *DisplsMPI;             ///< MPI displacement gathering arrays
+    int            NbMPI,RankMPI;         ///< Number of MPI process
+    int            NbThread;              ///< Number of OpenMP threads
+    int            Signal;                ///< Trapped signal
+    TApp_Affinity  Affinity;              ///< Thread placement affinity
+    int            NbNodeMPI,NodeRankMPI; ///< Number of MPI process on the current node
 #ifdef HAVE_MPI
     MPI_Comm       NodeComm,NodeHeadComm;///< Communicator for the current node and the head nodes
 #endif //HAVE_MPI
@@ -206,7 +209,7 @@ TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
 void  App_Free(void);
 void  App_Start(void);
 int   App_End(int Status);
-void  App_Log(TApp_LogLevel Level,const char *Format,...);
+void  App_LogFrom(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...);
 void  App_LogOpen(void);
 void  App_LogClose(void);
 int   App_LogLevel(char *Val);
