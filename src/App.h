@@ -57,19 +57,19 @@
 #define TRUE   1
 #define FALSE  0
 
-#define APP_COLOR_BLINK     "\x1b[5m"
-#define APP_COLOR_BLACK     "\x1b[0;30m"
-#define APP_COLOR_RED       "\x1b[0;31m"
-#define APP_COLOR_GREEN     "\x1b[0;32m"
-#define APP_COLOR_ORANGE    "\x1b[33m" 
-#define APP_COLOR_YELLOW    "\x1b[1m\x1b[33m"
-#define APP_COLOR_BLUE      "\x1b[0;34m"
-#define APP_COLOR_MAGENTA   "\x1b[0;35m"
-#define APP_COLOR_CYAN      "\x1b[0;36m"
-#define APP_COLOR_LIGHTCYAN "\x1b[1m\x1b[36m"
-#define APP_COLOR_GRAY      "\x1b[0;37m"
-#define APP_COLOR_RESET     "\x1b[0m"
-
+#define APP_COLOR_BLINK      "\x1b[5m"
+#define APP_COLOR_BLACK      "\x1b[0;30m"
+#define APP_COLOR_RED        "\x1b[0;31m"
+#define APP_COLOR_GREEN      "\x1b[0;32m"
+#define APP_COLOR_LIGHTGREEN "\x1b[1;32m"
+#define APP_COLOR_ORANGE     "\x1b[33m" 
+#define APP_COLOR_YELLOW     "\x1b[1m\x1b[33m"
+#define APP_COLOR_BLUE       "\x1b[0;34m"
+#define APP_COLOR_MAGENTA    "\x1b[0;35m"
+#define APP_COLOR_CYAN       "\x1b[0;36m"
+#define APP_COLOR_LIGHTCYAN  "\x1b[1m\x1b[36m"
+#define APP_COLOR_GRAY       "\x1b[0;37m"
+#define APP_COLOR_RESET      "\x1b[0m"
 #define APP_MASTER    0
 #define APP_THREAD    1
 
@@ -104,30 +104,30 @@ typedef enum { APP_FR=0x0,APP_EN=0x01 } TApp_Lang;
 typedef enum { APP_OK=1,APP_ERR=0 } TApp_RetCode;
 typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2,APP_AFFINITY_SOCKET=3 } TApp_Affinity;
 
-#define App_Log(LEVEL, ...) App_LogFrom(LEVEL,APP_MAIN,__VA_ARGS__)
+#define App_Log(LEVEL, ...) Lib_Log(LEVEL,APP_MAIN,__VA_ARGS__)
 
 #define APP_ASRT_OK(x) if( (x)!=APP_OK ) return(APP_ERR)
 #define APP_ASRT_OK_M(Fct, ...) \
    if( (Fct)!=APP_OK ) { \
-      App_LogFrom(APP_ERROR,APP_MAIN, __VA_ARGS__); \
+      Lib_Log(APP_ERROR,APP_MAIN, __VA_ARGS__); \
       return(APP_ERR); \
    }
 
 // Check FST function and return the specified value if an error was encountered
 #define APP_FST_ASRT_H(Fct, ...) \
    if( (Fct) < 0 ) { \
-      App_LogFrom(APP_ERROR,APP_MAIN, __VA_ARGS__); \
+      Lib_Log(APP_ERROR,APP_MAIN, __VA_ARGS__); \
       return(APP_ERR); \
    }
 #define APP_FST_ASRT(Fct, ...) \
    if( (Fct) != 0 ) { \
-      App_LogFrom(APP_ERROR,APP_MAIN, __VA_ARGS__); \
+      Lib_Log(APP_ERROR,APP_MAIN, __VA_ARGS__); \
       return(APP_ERR); \
    }
 // Memory helpers
 #define APP_MEM_ASRT(Buf,Fct) \
    if( !(Buf=(Fct)) ) { \
-      App_LogFrom(APP_ERROR,APP_MAIN,"(%s) Could not allocate memory for field %s at line %d.\n",__func__,#Buf,__LINE__); \
+      Lib_Log(APP_ERROR,APP_MAIN,"(%s) Could not allocate memory for field %s at line %d.\n",__func__,#Buf,__LINE__); \
       return(APP_ERR); \
    }
 #define APP_FREE(Ptr) if(Ptr) { free(Ptr); Ptr=NULL; }
@@ -136,14 +136,14 @@ typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2
 #define APP_MPI_ASRT(Fct) { \
    int err = (Fct); \
    if( err!=MPI_SUCCESS ) { \
-      App_LogFrom(APP_ERROR,APP_MAIN,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
+      Lib_Log(APP_ERROR,APP_MAIN,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
       return(APP_ERR); \
    } \
 }
 #define APP_MPI_CHK(Fct) { \
    int err = (Fct); \
    if( err!=MPI_SUCCESS ) { \
-      App_LogFrom(APP_ERROR,APP_MAIN,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
+      Lib_Log(APP_ERROR,APP_MAIN,"(%s) MPI call %s at line %d failed with code %d for MPI node %d\n",__func__,#Fct,__LINE__,err,App->RankMPI); \
    } \
 }
 #endif //HAVE_MPI
@@ -209,7 +209,7 @@ TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
 void  App_Free(void);
 void  App_Start(void);
 int   App_End(int Status);
-void  App_LogFrom(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...);
+void  Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...);
 void  App_LogOpen(void);
 void  App_LogClose(void);
 int   App_LogLevel(char *Val);

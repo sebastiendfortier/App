@@ -4,7 +4,8 @@ module app
 
     enum, bind(C) 
        enumerator :: APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4,APP_QUIET=5
-    end enum
+       enumerator :: APP_MAIN=0,APP_LIBRMN=1,APP_LIBVGRID=2,APP_LIBINTERPV=3,APP_LIBGEOREF=4,APP_LIBRPNMPI=5,APP_LIBIRIS=6
+       end enum
     
     type(C_PTR) :: app_ptr
     character (len=*) , parameter :: EOL = char(13)//char(11)
@@ -60,8 +61,8 @@ module app
         character(C_CHAR), dimension(*) :: msg
     end SUBROUTINE
 
-    !    void  App_LogFrom(TApp_LogLevel Level,const char *Format,...);
-    SUBROUTINE app_logfrom(level,lib,msg) BIND(C, name="App_LogFrom4Fortran")
+    !    void  Lib_Log(TApp_LogLevel Level,const char *Format,...);
+    SUBROUTINE Lib_Log(level,lib,msg) BIND(C, name="Lib_Log4Fortran")
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: level

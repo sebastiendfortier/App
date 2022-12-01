@@ -621,11 +621,11 @@ void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
       while(*--s==' ')
          *s='\0';
 
-      App_LogFrom(Level,APP_MAIN,"%s\n",Message);
+      Lib_Log(Level,APP_MAIN,"%s\n",Message);
    }
 }
 
-void App_LogFrom4Fortran(TApp_LogLevel Level,TApp_Lib Lib,const char *Message) {
+void Lib_Log4Fortran(TApp_LogLevel Level,TApp_Lib Lib,const char *Message) {
 
   char *s;
 
@@ -635,11 +635,11 @@ void App_LogFrom4Fortran(TApp_LogLevel Level,TApp_Lib Lib,const char *Message) {
       while(*--s==' ')
          *s='\0';
 
-      App_LogFrom(Level,Lib,"%s\n",Message);
+      Lib_Log(Level,Lib,"%s\n",Message);
    }
 }
 
-void App_LogFrom(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
+void Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
 
    static char    *levels[] = { "FATAL","ERROR","WARNING","INFO","DEBUG","EXTRA" };
    static char    *colors[] = { APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
