@@ -63,12 +63,20 @@ int App_MPIProcCmp(const void *a,const void *b) {
 }
 #endif
 
+/**----------------------------------------------------------------------------
+ * @brief  Ajouter une librairie (info pour header de log)
+ * @author Jean-Philippe Gauthier
+ * @date   November 2022
+ *    @param[in]  Lib      Library name
+ *    @param[in]  Version  Library  version
+ *
+ *    @return              Parametres de l'application initialisee
+*/
 void App_LibList(char *Lib,char *Version) {
    App->Libs[App->LibsNb]=strdup(Lib);
    App->LibsVersion[App->LibsNb]=strdup(Version);
    App->LibsNb++;
 }
-
 
 /**----------------------------------------------------------------------------
  * @brief  Initialiser la structure App
@@ -674,8 +682,8 @@ void Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
    if (Level==APP_WARNING)                   App->LogWarning++;
    if (Level==APP_ERROR || Level==APP_FATAL) App->LogError++;
 
-   // Check if requested level is quiet and this is not an error
-   if (App->LogLevel[Lib]==APP_QUIET && Level!=APP_ERROR && Level!=APP_FATAL) return;
+   // Check if requested level is quiet
+   if (App->LogLevel[Lib]==APP_QUIET) return;
 
    // If this is within the request level
    if (Level<=App->LogLevel[Lib]) {
@@ -784,30 +792,32 @@ void App_Progress(float Percent,const char *Format,...) {
  *
  * @param[in]  Val     Niveau de log a traiter
  */
-int App_LogLevel(char *Val) {
+int Lib_LogLevel(char *Val,TApp_Lib Lib) {
 
    char *endptr=NULL;
    int  l;
    
    if (Val && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
-         App->LogLevel[0]=0;
+         App->LogLevel[Lib]=0;
       } else if (strncasecmp(Val,"WARN",4)==0) {
-         App->LogLevel[0]=APP_WARNING;
+         App->LogLevel[Lib]=APP_WARNING;
       } else if (strncasecmp(Val,"INFO",5)==0) {
-         App->LogLevel[0]=APP_INFO;
+         App->LogLevel[Lib]=APP_INFO;
       } else if (strncasecmp(Val,"DEBUG",5)==0) {
-         App->LogLevel[0]=APP_DEBUG;
+         App->LogLevel[Lib]=APP_DEBUG;
       } else if (strncasecmp(Val,"EXTRA",5)==0) {
-         App->LogLevel[0]=APP_EXTRA;
+         App->LogLevel[Lib]=APP_EXTRA;
       } else if (strncasecmp(Val,"QUIET",5)==0) {
-         App->LogLevel[0]=APP_QUIET;
+         App->LogLevel[Lib]=APP_QUIET;
       } else {
-         App->LogLevel[0]=strtoul(Val,&endptr,10);
+         App->LogLevel[Lib]=strtoul(Val,&endptr,10);
       }
-      for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[0];
+      if (Lib==APP_MAIN) {
+         for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[0];
+      }
    }
-   return(App->LogLevel[0]);
+   return(App->LogLevel[Lib]);
 }
 
 /**----------------------------------------------------------------------------

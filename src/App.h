@@ -104,8 +104,6 @@ typedef enum { APP_FR=0x0,APP_EN=0x01 } TApp_Lang;
 typedef enum { APP_OK=1,APP_ERR=0 } TApp_RetCode;
 typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2,APP_AFFINITY_SOCKET=3 } TApp_Affinity;
 
-#define App_Log(LEVEL, ...) Lib_Log(LEVEL,APP_MAIN,__VA_ARGS__)
-
 #define APP_ASRT_OK(x) if( (x)!=APP_OK ) return(APP_ERR)
 #define APP_ASRT_OK_M(Fct, ...) \
    if( (Fct)!=APP_OK ) { \
@@ -205,14 +203,17 @@ extern __thread TApp *App;               ///< Per thread App pointer
 
 typedef int (TApp_InputParseProc) (void *Def,char *Token,char *Value,int Index);
 
+#define App_Log(LEVEL, ...) Lib_Log(LEVEL,APP_MAIN,__VA_ARGS__)
+#define App_LogLevel(LEVEL) Lib_LogLevel(LEVEL,APP_MAIN)
+
 TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
 void  App_Free(void);
 void  App_Start(void);
 int   App_End(int Status);
 void  Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...);
+int   Lib_LogLevel(char *Val,TApp_Lib Lib);
 void  App_LogOpen(void);
 void  App_LogClose(void);
-int   App_LogLevel(char *Val);
 int   App_LogTime(char *Val);
 void  App_Progress(float Percent,const char *Format,...);
 int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
