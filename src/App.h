@@ -78,7 +78,7 @@
 #define APP_LISTMAX   4096                ///< Maximum number of items in a flag list
 #define APP_SEED      1049731793          ///< Initial FIXED seed
 #define APP_FTNSTRMAX 1024                ///< Maximum fortran message length
-#define APP_LIBSMAX   256                 ///< Maximum number of libraries
+#define APP_LIBSMAX   64                  ///< Maximum number of libraries
 
 #define APP_NOARGSFLAG 0x00               ///< No flag specified
 #define APP_NOARGSFAIL 0x01               ///< Fail if no arguments are specified
@@ -177,9 +177,7 @@ typedef struct TApp {
     int            Type;                  ///< App object type (APP_MASTER,APP_THREAD)
     int            Step;                  ///< Model step
 
-    char*          Libs[APP_LIBSMAX];
     char*          LibsVersion[APP_LIBSMAX];
-    int            LibsNb;
 
     int            Seed,*OMPSeed;         ///< Random number generator seed
     int           *TotalsMPI;             ///< MPI total number of items arrays
@@ -203,15 +201,16 @@ extern __thread TApp *App;               ///< Per thread App pointer
 
 typedef int (TApp_InputParseProc) (void *Def,char *Token,char *Value,int Index);
 
-#define App_Log(LEVEL, ...) Lib_Log(LEVEL,APP_MAIN,__VA_ARGS__)
-#define App_LogLevel(LEVEL) Lib_LogLevel(LEVEL,APP_MAIN)
+#define App_Log(LEVEL, ...) Lib_Log(APP_MAIN,LEVEL,__VA_ARGS__)
 
 TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
+void  App_LibRegister(TApp_Lib Lib,char *Version);
 void  App_Free(void);
 void  App_Start(void);
 int   App_End(int Status);
-void  Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...);
-int   Lib_LogLevel(char *Val,TApp_Lib Lib);
+void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
+int   Lib_LogLevel(TApp_Lib Lib,char *Val);
+int   App_LogLevel(char *Val);
 void  App_LogOpen(void);
 void  App_LogClose(void);
 int   App_LogTime(char *Val);

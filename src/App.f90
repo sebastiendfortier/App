@@ -61,8 +61,8 @@ module app
         character(C_CHAR), dimension(*) :: msg
     end SUBROUTINE
 
-    !    void  Lib_Log(TApp_LogLevel Level,const char *Format,...);
-    SUBROUTINE Lib_Log(level,lib,msg) BIND(C, name="Lib_Log4Fortran")
+!    void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
+    SUBROUTINE Lib_Log(lib,level,msg) BIND(C, name="Lib_Log4Fortran")
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: level
@@ -70,13 +70,21 @@ module app
         character(C_CHAR), dimension(*) :: msg
     end SUBROUTINE
     
-    !   void  App_Progress(float Percent,const char *Format,...);
+!   void  App_Progress(float Percent,const char *Format,...);
 
-!   int   App_LogLevel(char *Val);
+!   int   App_LogLevel(char *Level);
     integer(C_INT) FUNCTION app_loglevel(level) BIND(C, name="App_LogLevel")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: level
+        character(C_CHAR), dimension(*) ::  level
+    end FUNCTION
+
+!   int Lib_LogLevel(TApp_Lib Lib,char *Val) {
+    integer(C_INT) FUNCTION lib_loglevel(lib,level) BIND(C, name="Lib_LogLevel")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer(C_INT), value :: Lib
+        character(C_CHAR), dimension(*) ::  level
     end FUNCTION
 
 !    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);

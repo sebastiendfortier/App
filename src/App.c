@@ -36,14 +36,15 @@
 #include "App_build_info.h"
 #include "str.h"
 #include "System.h"
-#ifdef HAVE_RMN
-   #include "rmn.h"
-   #include "rmn/rpnmacros.h"
-#endif
 
 static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
+
+static char* AppLibNames[]    = { "main", "rmn", "vgrid", "interpv", "georef", "rpnmpi", "iris" };
+static char* AppLibLog[]      = { "","RMN:","VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:" };
+static char* AppLevelNames[]  = { "FATAL","ERROR","WARNING","INFO","DEBUG","EXTRA" };
+static char* AppLevelColors[] = { APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
 char* App_ErrorGet(void) {                       //< Return last error
    return(APP_LASTERROR);
@@ -72,10 +73,8 @@ int App_MPIProcCmp(const void *a,const void *b) {
  *
  *    @return              Parametres de l'application initialisee
 */
-void App_LibList(char *Lib,char *Version) {
-   App->Libs[App->LibsNb]=strdup(Lib);
-   App->LibsVersion[App->LibsNb]=strdup(Version);
-   App->LibsNb++;
+void App_LibRegister(TApp_Lib Lib,char *Version) {
+   App->LibsVersion[Lib]=strdup(Version);
 }
 
 /**----------------------------------------------------------------------------
@@ -126,7 +125,6 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->OMPSeed=NULL;
    App->Seed=time(NULL);
    App->Signal=0;
-   App->LibsNb=0;
    App->TimerLog=App_TimerCreate();
 
    for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_INFO;
@@ -317,12 +315,6 @@ void App_Start(void) {
    App_Trap(SIGUSR2);
    App_Trap(SIGTERM);
 
-#ifdef HAVE_RMN
-   // RMN Lib settings
-   c_fstopc("MSGLVL","WARNIN",0);
-   c_fstopc("TOLRNC","SYSTEM",0);
-#endif
-
    App->State      = APP_RUN;
    App->LogWarning = 0;
    App->LogError   = 0;
@@ -382,12 +374,9 @@ void App_Start(void) {
 //      App_Log(APP_MUST,"libApp         : %s\n",PROJECT_VERSION_STRING);
 
       App_Log(APP_MUST,"Libraries      :\n");
-#ifdef HAVE_RMN
-      extern char rmn_version[];
-      App_Log(APP_MUST,"   %-12s: %s\n","rmn",&rmn_version);
-#endif
-      for(t=0;t<App->LibsNb;t++) {
-         App_Log(APP_MUST,"   %-12s: %s\n",App->Libs[t],App->LibsVersion[t]);
+      for(t=1;t<APP_LIBSMAX;t++) {
+         if (App->LibsVersion[t])
+            App_Log(APP_MUST,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
       }
 
       App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
@@ -629,11 +618,11 @@ void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
       while(*--s==' ')
          *s='\0';
 
-      Lib_Log(Level,APP_MAIN,"%s\n",Message);
+      Lib_Log(APP_MAIN,Level,"%s\n",Message);
    }
 }
 
-void Lib_Log4Fortran(TApp_LogLevel Level,TApp_Lib Lib,const char *Message) {
+void Lib_Log4Fortran(TApp_Lib Lib,TApp_LogLevel Level,const char *Message) {
 
   char *s;
 
@@ -643,16 +632,13 @@ void Lib_Log4Fortran(TApp_LogLevel Level,TApp_Lib Lib,const char *Message) {
       while(*--s==' ')
          *s='\0';
 
-      Lib_Log(Level,Lib,"%s\n",Message);
+      Lib_Log(Lib,Level,"%s\n",Message);
    }
 }
 
-void Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
+void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
 
-   static char    *levels[] = { "FATAL","ERROR","WARNING","INFO","DEBUG","EXTRA" };
-   static char    *colors[] = { APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
-   static char    *libs[]   = { "","RMN:","VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:" };
-   char           *color,time[32];
+   char           *c,*color,time[32];
    int             l;
    struct timeval  now,diff;
    struct tm      *lctm;
@@ -665,6 +651,26 @@ void Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
       App->TimerLog = App_TimerCreate();
       if (!App->LogLevel[0]) 
           for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_INFO;
+
+      // Check verbose level of libraries 
+      if ((c=getenv("APP_VERBOSE_RMN"))) {
+         Lib_LogLevel(APP_LIBRMN,c);
+      }
+      if (App->LibsVersion[APP_LIBVGRID] && (c=getenv("APP_VERBOSE_VGRID"))) {
+         Lib_LogLevel(APP_LIBVGRID,c);
+      }
+      if (App->LibsVersion[APP_LIBINTERPV] && (c=getenv("APP_VERBOSE_INTERPV"))) {
+         Lib_LogLevel(APP_LIBINTERPV,c);
+      }
+      if (App->LibsVersion[APP_LIBGEOREF] && (c=getenv("APP_VERBOSE_GEOREF"))) {
+         Lib_LogLevel(APP_LIBGEOREF,c);
+      }
+      if (App->LibsVersion[APP_LIBRPNMPI] && (c=getenv("APP_VERBOSE_RPNMPI"))) {
+         Lib_LogLevel(APP_LIBRPNMPI,c);
+      }
+      if (App->LibsVersion[APP_LIBIRIS] && (c=getenv("APP_VERBOSE_IRIS"))) {
+         Lib_LogLevel(APP_LIBIRIS,c);
+      }
   }
 
    // Check for once log flag
@@ -683,13 +689,13 @@ void Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
    if (Level==APP_ERROR || Level==APP_FATAL) App->LogError++;
 
    // Check if requested level is quiet
-   if (App->LogLevel[Lib]==APP_QUIET) return;
+   if (App->LogLevel[Lib]==APP_QUIET && Level>APP_MUST) return;
 
    // If this is within the request level
    if (Level<=App->LogLevel[Lib]) {
 
       if (Level>=0) {
-         color=App->LogColor?colors[Level]:colors[APP_INFO];
+         color=App->LogColor?AppLevelColors[Level]:AppLevelColors[APP_INFO];
 
          if (App->LogTime) {
             gettimeofday(&now,NULL);
@@ -719,16 +725,16 @@ void Lib_Log(TApp_LogLevel Level,TApp_Lib Lib,const char *Format,...) {
 #ifdef HAVE_MPI
          if (App_IsMPI())
             if (App->Step) {
-               fprintf(App->LogStream,"%s%sP%03d (%s) #%d %s",color,time,App->RankMPI,levels[Level],App->Step,libs[Lib]);
+               fprintf(App->LogStream,"%s%sP%03d (%s) #%d %s",color,time,App->RankMPI,AppLevelNames[Level],App->Step,AppLibLog[Lib]);
             } else {
-               fprintf(App->LogStream,"%s%sP%03d (%s) %s",color,time,App->RankMPI,levels[Level],libs[Lib]);
+               fprintf(App->LogStream,"%s%sP%03d (%s) %s",color,time,App->RankMPI,AppLevelNames[Level],AppLibLog[Lib]);
             }
          else 
 #endif     
             if (App->Step) {
-               fprintf(App->LogStream,"%s%s(%s) #%d %s",color,time,levels[Level],App->Step,libs[Lib]);
+               fprintf(App->LogStream,"%s%s(%s) #%d %s",color,time,AppLevelNames[Level],App->Step,AppLibLog[Lib]);
             } else {
-               fprintf(App->LogStream,"%s%s(%s) %s",color,time,levels[Level],libs[Lib]);
+               fprintf(App->LogStream,"%s%s(%s) %s",color,time,AppLevelNames[Level],AppLibLog[Lib]);
             }
       }
       
@@ -792,14 +798,18 @@ void App_Progress(float Percent,const char *Format,...) {
  *
  * @param[in]  Val     Niveau de log a traiter
  */
-int Lib_LogLevel(char *Val,TApp_Lib Lib) {
+int App_LogLevel(char *Val) {
+   return(Lib_LogLevel(APP_MAIN,Val));
+}
+
+int Lib_LogLevel(TApp_Lib Lib,char *Val) {
 
    char *endptr=NULL;
    int  l;
    
    if (Val && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
-         App->LogLevel[Lib]=0;
+         App->LogLevel[Lib]=APP_ERROR;
       } else if (strncasecmp(Val,"WARN",4)==0) {
          App->LogLevel[Lib]=APP_WARNING;
       } else if (strncasecmp(Val,"INFO",5)==0) {
