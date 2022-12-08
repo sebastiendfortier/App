@@ -30,7 +30,7 @@ set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 
 find_package(OpenMP REQUIRED COMPONENTS)
-find_package(rmn ${rmn_REQ_VERSION} COMPONENTS static)
+#find_package(rmn ${rmn_REQ_VERSION} COMPONENTS static)
 
 add_subdirectory(src src)
 
