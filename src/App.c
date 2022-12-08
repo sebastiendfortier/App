@@ -25,6 +25,7 @@
  */
 #define APP_BUILD
 
+#include <math.h>
 #include <sched.h>
 #include <unistd.h>
 #include <sys/signal.h>
@@ -35,7 +36,6 @@
 #include "App.h"
 #include "App_build_info.h"
 #include "str.h"
-#include "System.h"
 
 static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
@@ -1178,7 +1178,7 @@ int App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc) {
 }
 
 /**----------------------------------------------------------------------------
- * @brief  Parse a boolean valu
+ * @brief  Parse a boolean value
  * @author Jean-Philippe Gauthier
  * @date   Fevrier 2013
  * 
@@ -1202,6 +1202,44 @@ int App_ParseBool(char *Param,char *Value,char *Var) {
 }   
 
 /**----------------------------------------------------------------------------
+ * @brief  Convert date/time to seconds
+ * @author Jean-Philippe Gauthier
+ * @date   Mai 2006
+ * 
+ * @param[in]  YYYYMMDD Date
+ * @param[in]  HHMMSS   Time
+ * @param[out] GMT      GMT (GMT or local)
+ *
+* @return  Sec
+*/
+time_t App_DateTime2Seconds(int YYYYMMDD,int HHMMSS,int GMT) {
+
+   struct tm date;
+
+   extern time_t timezone;
+
+   date.tm_sec=fmod(HHMMSS,100);       /*seconds apres la minute [0,61]*/
+   HHMMSS/=100;
+   date.tm_min=fmod(HHMMSS,100);       /*minutes apres l'heure [0,59]*/
+   HHMMSS/=100;
+   date.tm_hour=HHMMSS;                /*heures depuis minuit [0,23]*/
+
+   date.tm_mday=fmod(YYYYMMDD,100);    /*jour du mois [1,31]*/
+   YYYYMMDD/=100;
+   date.tm_mon=fmod(YYYYMMDD,100)-1;   /*mois apres Janvier [0,11]*/
+   YYYYMMDD/=100;
+   date.tm_year=YYYYMMDD-1900;         /*annee depuis 1900*/
+   date.tm_isdst=0;                    /*Flag de l'heure avancee*/
+
+   /* Force GMT and set back to original TZ after*/
+   if (GMT) {
+      return(mktime(&date)-timezone);
+   } else {
+      return(mktime(&date));
+   }
+}
+
+/**----------------------------------------------------------------------------
  * @brief  Parse a date value (YYYMMDDhhmm)
  * @author Jean-Philippe Gauthier
  * @date   Fevrier 2013
@@ -1223,10 +1261,10 @@ int App_ParseDate(char *Param,char *Value,time_t *Var) {
    }
    switch( strlen(Value) ) {
       case 12:
-         *Var=System_DateTime2Seconds(t/10000,(t-(t/10000*10000))*100,1);
+         *Var=App_DateTime2Seconds(t/10000,(t-(t/10000*10000))*100,1);
          break;
       case 14:
-         *Var=System_DateTime2Seconds(t/1000000,(t-(t/1000000*1000000)),1);
+         *Var=App_DateTime2Seconds(t/1000000,(t-(t/1000000*1000000)),1);
          break;
       default:
          App_Log(APP_ERROR,"Invalid value for %s, must be YYYYMMDDHHMM or YYYYMMDDHHMMSS: %s\n",Param,Value);
