@@ -3,9 +3,10 @@ module app
     implicit none
 
     enum, bind(C) 
-       enumerator :: APP_MUST=-1,APP_ERROR=0,APP_WARNING=1,APP_INFO=2,APP_DEBUG=3,APP_EXTRA=4,APP_QUIET=5
-       enumerator :: APP_MAIN=0,APP_LIBRMN=1,APP_LIBVGRID=2,APP_LIBINTERPV=3,APP_LIBGEOREF=4,APP_LIBRPNMPI=5,APP_LIBIRIS=6
-       end enum
+       enumerator :: APP_VERBATIM=-1, APP_ALWAYS=0, APP_FATAL=1, APP_SYSTEM=2, APP_ERROR=3, APP_WARNING=4, APP_INFO=5, APP_DEBUG=6, APP_EXTRA=7, APP_QUIET=8
+       enumerator :: APP_MAIN=0, APP_LIBRMN=1, APP_LIBFST=2, APP_LIBWB=3, APP_LIBVGRID=4, APP_LIBINTERPV=5, APP_LIBGEOREF=6, APP_LIBRPNMPI=7, APP_LIBIRIS=8
+       enumerator :: APP_MASTER=0, APP_THREAD=1
+    end enum
     
     type(C_PTR) :: app_ptr
     character (len=*) , parameter :: EOL = char(13)//char(11)
@@ -33,8 +34,8 @@ module app
         use, intrinsic :: iso_c_binding
     end SUBROUTINE
 
-!   void App_LibList(char *Lib,char *Version) {
-    SUBROUTINE app_liblist(name,version) BIND(C, name="App_LibList")
+!   void App_LibRegister(char *Lib,char *Version) {
+    SUBROUTINE app_libregister(name,version) BIND(C, name="App_LibRegister")
         use, intrinsic :: iso_c_binding
         implicit none
         character(C_CHAR), dimension(*) :: name
@@ -76,18 +77,33 @@ module app
     integer(C_INT) FUNCTION app_loglevel(level) BIND(C, name="App_LogLevel")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) ::  level
+        character(C_CHAR), dimension(*) :: level
     end FUNCTION
 
-!   int Lib_LogLevel(TApp_Lib Lib,char *Val) {
+    !   int App_LogLevelNo(TApp_LogLevel Val) {
+    integer(C_INT) FUNCTION app_loglevelno(levelno) BIND(C, name="App_LogLevelNo")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer(C_INT), value :: levelno
+    end FUNCTION
+
+    !   int Lib_LogLevel(TApp_Lib Lib,char *Val) {
     integer(C_INT) FUNCTION lib_loglevel(lib,level) BIND(C, name="Lib_LogLevel")
         use, intrinsic :: iso_c_binding
         implicit none
-        integer(C_INT), value :: Lib
-        character(C_CHAR), dimension(*) ::  level
+        integer(C_INT), value :: lib
+        character(C_CHAR), dimension(*) :: level
     end FUNCTION
 
-!    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
+    !   int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
+    integer(C_INT) FUNCTION lib_loglevelno(lib,levelno) BIND(C, name="Lib_LogLevelNo")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer(C_INT), value :: lib
+        integer(C_INT), value :: levelno
+    end FUNCTION
+
+    !    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
 !    int   App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc);
 
 !   int   App_ParseBool(char *Param,char *Value,char *Var);

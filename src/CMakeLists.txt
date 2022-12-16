@@ -1,4 +1,4 @@
-message(STATUS "Generating App librairie")
+message(STATUS "Generating App library")
 
 file(GLOB PROJECT_INCLUDE_FILES *.h)
 file(GLOB PROJECT_C_FILES *.c)

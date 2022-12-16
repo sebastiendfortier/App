@@ -1,33 +1,18 @@
-/*=============================================================================
- * Environnement Canada
- * Centre Meteorologique Canadian
- * 2121 Trans-Canadienne
- * Dorval, Quebec
- *
- * Projet    : Librairie de fonctions utiles
- * Fichier   : App.c
- * Creation  : Septembre 2008 - J.P. Gauthier
- *
- * Description: Fonctions génériques à toute les applications.
- *
- * Remarques :
- *    This package can uses the following environment variables if defined
- *       APP_PARAMS       : List of parameters for the appliaction (instead of givins on command line) 
- *       APP_VERBOSE      : Define verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA,QUIET or 0-5) default:INFO
- *       APP_VERBOSECOLOR : Use color in log messages
- *       APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
- *       APP_LOGSPLIT     : Split log stream/file per MPI PE
- *       APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stdout
- * 
- *       CMCLNG           : Language tu use (francais,english)
- *       OMP_NUM_THREADS  : Number of openMP threads
- *==============================================================================
- */
 #define APP_BUILD
 
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <time.h>
+#include <malloc.h>
+#include <alloca.h>
+#include <errno.h>
+#include <limits.h>
+#include <float.h>
 #include <math.h>
 #include <sched.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <sys/signal.h>
 #ifndef _AIX
    #include <sys/syscall.h>
@@ -41,10 +26,10 @@ static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
-static char* AppLibNames[]    = { "main", "rmn", "vgrid", "interpv", "georef", "rpnmpi", "iris" };
-static char* AppLibLog[]      = { "","RMN:","VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:" };
-static char* AppLevelNames[]  = { "FATAL","ERROR","WARNING","INFO","DEBUG","EXTRA" };
-static char* AppLevelColors[] = { APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
+static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "vgrid", "interpv", "georef", "rpnmpi", "iris" };
+static char* AppLibLog[]      = { "","RMN:", "FST:", "WB:", "VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:" };
+static char* AppLevelNames[]  = { "INFO", "FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
+static char* AppLevelColors[] = { "",APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
 char* App_ErrorGet(void) {                       //< Return last error
    return(APP_LASTERROR);
@@ -90,10 +75,7 @@ void App_LibRegister(TApp_Lib Lib,char *Version) {
  *    @return              Parametres de l'application initialisee
 */
 TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
-
-   char *c;
-   int  l;
-   
+  
    // In coprocess threaded mode, we need a different App object than the master thread
    App=(Type==APP_THREAD)?(TApp*)malloc(sizeof(TApp)):&AppInstance;
 
@@ -102,14 +84,8 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->Version=Version?strdup(Version):strdup("");
    App->Desc=Desc?strdup(Desc):strdup("");
    App->TimeStamp=Stamp?strdup(Stamp):strdup("");
-   App->Language=APP_EN;
    App->LogFile=strdup("stderr");
    App->LogStream=(FILE*)NULL;
-   App->LogWarning=0;
-   App->LogError=0;
-   App->LogColor=FALSE;
-   App->LogTime=FALSE;
-   App->LogSplit=FALSE;
    App->Tag=NULL;
    App->State=APP_STOP;
    App->Percent=0.0;
@@ -125,14 +101,40 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->OMPSeed=NULL;
    App->Seed=time(NULL);
    App->Signal=0;
-   App->TimerLog=App_TimerCreate();
-
-   for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_INFO;
 
 #ifdef HAVE_MPI
+   App->Comm=MPI_COMM_WORLD;
    App->NodeComm=MPI_COMM_NULL;
    App->NodeHeadComm=MPI_COMM_NULL;
 #endif
+
+   App_InitEnv();
+
+   return(App);
+}
+
+/**----------------------------------------------------------------------------
+ * @brief  Initialiser l'environnement dans la structure App
+ * @author Jean-Philippe Gauthier
+ * @date   Decembre 2022
+*/
+void App_InitEnv(){
+
+   char *c;
+   int  l;
+
+   gettimeofday(&App->Time,NULL);
+
+   App->TimerLog=App_TimerCreate();
+   App->Tolerance=APP_QUIET;
+   App->Language=APP_EN;
+   App->LogWarning=0;
+   App->LogError=0;
+   App->LogColor=FALSE;
+   App->LogTime=FALSE;
+   App->LogSplit=FALSE;
+
+   for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_WARNING;
 
    // Check the log parameters in the environment 
    if ((c=getenv("APP_VERBOSE"))) {
@@ -151,12 +153,36 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
       App->LogFile=strdup(c);
    }
    
+   // Check verbose level of libraries 
+   if ((c=getenv("APP_VERBOSE_RMN"))) {
+      Lib_LogLevel(APP_LIBRMN,c);
+   }
+   if ((c=getenv("APP_VERBOSE_FST"))) {
+      Lib_LogLevel(APP_LIBFST,c);
+   }
+   if ((c=getenv("APP_VERBOSE_WB"))) {
+      Lib_LogLevel(APP_LIBWB,c);
+   }
+   if (App->LibsVersion[APP_LIBVGRID] && (c=getenv("APP_VERBOSE_VGRID"))) {
+      Lib_LogLevel(APP_LIBVGRID,c);
+   }
+   if (App->LibsVersion[APP_LIBINTERPV] && (c=getenv("APP_VERBOSE_INTERPV"))) {
+      Lib_LogLevel(APP_LIBINTERPV,c);
+   }
+   if (App->LibsVersion[APP_LIBGEOREF] && (c=getenv("APP_VERBOSE_GEOREF"))) {
+      Lib_LogLevel(APP_LIBGEOREF,c);
+   }
+   if (App->LibsVersion[APP_LIBRPNMPI] && (c=getenv("APP_VERBOSE_RPNMPI"))) {
+      Lib_LogLevel(APP_LIBRPNMPI,c);
+   }
+   if (App->LibsVersion[APP_LIBIRIS] && (c=getenv("APP_VERBOSE_IRIS"))) {
+      Lib_LogLevel(APP_LIBIRIS,c);
+   }
+
    // Check the language in the environment 
    if ((c=getenv("CMCLNG"))) {
       App->Language=(c[0]=='f' || c[0]=='F')?APP_FR:APP_EN;
    }
- 
-   return(App);
 }
 
 /**----------------------------------------------------------------------------
@@ -201,7 +227,7 @@ int App_NodeGroup() {
 
       n=names+App->RankMPI*MPI_MAX_PROCESSOR_NAME;
       APP_MPI_ASRT( MPI_Get_processor_name(n,&i) );
-      APP_MPI_ASRT( MPI_Allgather(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,names,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,MPI_COMM_WORLD) );
+      APP_MPI_ASRT( MPI_Allgather(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,names,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,App->Comm) );
 
       // Go through the names and check how many different nodes we have before our node
       for(i=0,color=-1,cptr=names; i<=App->RankMPI; ++i,cptr+=MPI_MAX_PROCESSOR_NAME) {
@@ -222,18 +248,18 @@ int App_NodeGroup() {
       // If we have more than one node
       if( mult ) {
          // Split the MPI procs into node groups
-         APP_MPI_ASRT( MPI_Comm_split(MPI_COMM_WORLD,color,App->RankMPI,&App->NodeComm) );
+         APP_MPI_ASRT( MPI_Comm_split(App->Comm,color,App->RankMPI,&App->NodeComm) );
 
          // Get the number and rank of each nodes in this new group
          APP_MPI_ASRT( MPI_Comm_rank(App->NodeComm,&App->NodeRankMPI) );
          APP_MPI_ASRT( MPI_Comm_size(App->NodeComm,&App->NbNodeMPI) );
 
          // Create a communicator for the head process of each node
-         APP_MPI_ASRT( MPI_Comm_split(MPI_COMM_WORLD,App->NodeRankMPI?MPI_UNDEFINED:0,App->RankMPI,&App->NodeHeadComm) );
+         APP_MPI_ASRT( MPI_Comm_split(App->Comm,App->NodeRankMPI?MPI_UNDEFINED:0,App->RankMPI,&App->NodeHeadComm) );
       } else {
          App->NbNodeMPI = App->NbMPI;
          App->NodeRankMPI = App->RankMPI;
-         App->NodeComm = MPI_COMM_WORLD;
+         App->NodeComm = App->Comm;
          App->NodeHeadComm = MPI_COMM_NULL;
       }
 #endif //HAVE_MPI
@@ -328,14 +354,14 @@ void App_Start(void) {
    MPI_Initialized(&mpi);
 
    if (mpi) {
-      MPI_Comm_size(MPI_COMM_WORLD,&App->NbMPI);
-      MPI_Comm_rank(MPI_COMM_WORLD,&App->RankMPI);
+      MPI_Comm_size(App->Comm,&App->NbMPI);
+      MPI_Comm_rank(App->Comm,&App->RankMPI);
 
       App->TotalsMPI=(int*)malloc((App->NbMPI+1)*sizeof(int));
       App->CountsMPI=(int*)malloc((App->NbMPI+1)*sizeof(int));
       App->DisplsMPI=(int*)malloc((App->NbMPI+1)*sizeof(int));
 
-//      App_NodeGroup();
+      App_NodeGroup();
    }
 #endif
 
@@ -366,44 +392,44 @@ void App_Start(void) {
 
    // Modify seed value for current processor/thread for parallelization.
    App->OMPSeed=(int*)calloc(App->NbThread,sizeof(int));
+//TODO   App_LibRegister(APP_LIBRMN,VERSION);
 
    if (!App->RankMPI) {
 
-      App_Log(APP_MUST,"-------------------------------------------------------------------------------------\n");
-      App_Log(APP_MUST,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
-//      App_Log(APP_MUST,"libApp         : %s\n",PROJECT_VERSION_STRING);
+      App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
+      App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
 
-      App_Log(APP_MUST,"Libraries      :\n");
+      App_Log(APP_VERBATIM,"Libraries      :\n");
       for(t=1;t<APP_LIBSMAX;t++) {
          if (App->LibsVersion[t])
-            App_Log(APP_MUST,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
+            App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
       }
 
-      App_Log(APP_MUST,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
+      App_Log(APP_VERBATIM,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
 
 #ifdef HAVE_OPENMP
       if (App->NbThread>1) {
          // OpenMP specification version
-         if       (_OPENMP >= 201811)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s5.0)\n",App->NbThread,_OPENMP,_OPENMP>201811?">":"");
-         else if  (_OPENMP >= 201511)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.5)\n",App->NbThread,_OPENMP,_OPENMP>201511?">":"");
-         else if  (_OPENMP >= 201307)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.0)\n",App->NbThread,_OPENMP,_OPENMP>201307?">":"");
-         else if  (_OPENMP >= 201107)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.1)\n",App->NbThread,_OPENMP,_OPENMP>201107?">":"");
-         else if  (_OPENMP >= 200805)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.0)\n",App->NbThread,_OPENMP,_OPENMP>200805?">":"");
-         else if  (_OPENMP >= 200505)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.5)\n",App->NbThread,_OPENMP,_OPENMP>200505?">":"");
-         else if  (_OPENMP >= 200203)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.0)\n",App->NbThread,_OPENMP,_OPENMP>200203?">":"");
-         else if  (_OPENMP >= 199810)  App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d -- OpenMP %s1.0)\n",App->NbThread,_OPENMP,_OPENMP>199810?">":"");
-         else                          App_Log(APP_MUST,"OpenMP threads : %i (Standard: %d)\n",App->NbThread,_OPENMP);
+         if       (_OPENMP >= 201811)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s5.0)\n",App->NbThread,_OPENMP,_OPENMP>201811?">":"");
+         else if  (_OPENMP >= 201511)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.5)\n",App->NbThread,_OPENMP,_OPENMP>201511?">":"");
+         else if  (_OPENMP >= 201307)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.0)\n",App->NbThread,_OPENMP,_OPENMP>201307?">":"");
+         else if  (_OPENMP >= 201107)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.1)\n",App->NbThread,_OPENMP,_OPENMP>201107?">":"");
+         else if  (_OPENMP >= 200805)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.0)\n",App->NbThread,_OPENMP,_OPENMP>200805?">":"");
+         else if  (_OPENMP >= 200505)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.5)\n",App->NbThread,_OPENMP,_OPENMP>200505?">":"");
+         else if  (_OPENMP >= 200203)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.0)\n",App->NbThread,_OPENMP,_OPENMP>200203?">":"");
+         else if  (_OPENMP >= 199810)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s1.0)\n",App->NbThread,_OPENMP,_OPENMP>199810?">":"");
+         else                          App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d)\n",App->NbThread,_OPENMP);
       }
 #endif //HAVE_OPENMP
 
       if (App->NbMPI>1) {
 #if defined MPI_VERSION && defined MPI_SUBVERSION
          // MPI specification version
-         App_Log(APP_MUST,"MPI processes  : %i (Standard: %d.%d)\n",App->NbMPI,MPI_VERSION,MPI_SUBVERSION);
+         App_Log(APP_VERBATIM,"MPI processes  : %i (Standard: %d.%d)\n",App->NbMPI,MPI_VERSION,MPI_SUBVERSION);
 #else
-         App_Log(APP_MUST,"MPI processes  : %i\n",App->NbMPI);
+         App_Log(APP_VERBATIM,"MPI processes  : %i\n",App->NbMPI);
 #endif
-#ifdef TODO_HAVE_MPI
+#ifdef HAVE_MPI
          char *nodes,*n;
          int i,cnt;
 
@@ -412,42 +438,42 @@ void App_Start(void) {
          if( nodes ) {
              // Get the physical node unique name of mpi procs
              APP_MPI_CHK( MPI_Get_processor_name(nodes,&i) );
-             APP_MPI_CHK( MPI_Gather(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,nodes,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,0,MPI_COMM_WORLD) );
+             APP_MPI_CHK( MPI_Gather(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,nodes,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,0,App->Comm) );
 
              // Sort the names
              qsort(nodes,App->NbMPI,MPI_MAX_PROCESSOR_NAME,App_MPIProcCmp);
 
              // Print the node names with a count of MPI per nodes
-             App_Log(APP_MUST,"MPI nodes      :");
+             App_Log(APP_VERBATIM,"MPI nodes      :");
              for(i=1,cnt=1,n=nodes; i<App->NbMPI; ++i,n+=MPI_MAX_PROCESSOR_NAME) {
                  if( strncmp(n,n+MPI_MAX_PROCESSOR_NAME,MPI_MAX_PROCESSOR_NAME) ) {
-                     App_Log(APP_MUST,"%s%.*s (%d)",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
+                     App_Log(APP_VERBATIM,"%s%.*s (%d)",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
                      cnt = 1;
                  } else {
                      ++cnt;
                  }
              }
-             App_Log(APP_MUST,"%s%.*s (%d)\n",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
+             App_Log(APP_VERBATIM,"%s%.*s (%d)\n",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
 
              free(nodes);
          }
 #endif //HAVE_MPI
       }
-      App_Log(APP_MUST,"-------------------------------------------------------------------------------------\n\n");
+      App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n\n");
    } else {
        // Send the node name (hostname)
-#ifdef TODO_HAVE_MPI
+#ifdef HAVE_MPI
        int i;
        char node[MPI_MAX_PROCESSOR_NAME]={'\0'};
        APP_MPI_CHK( MPI_Get_processor_name(node,&i) );
-       APP_MPI_CHK( MPI_Gather(node,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,NULL,0,MPI_DATATYPE_NULL,0,MPI_COMM_WORLD) );
+       APP_MPI_CHK( MPI_Gather(node,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,NULL,0,MPI_DATATYPE_NULL,0,App->Comm) );
 #endif //HAVE_MPI
    }
 
    // Make sure the header is printed before any other messages from other MPI tasks
 #ifdef TODO_HAVE_MPI
    if (App->NbMPI>1) {
-       MPI_Barrier(MPI_COMM_WORLD);
+       MPI_Barrier(App->Comm);
    }
 #endif //HAVE_MPI
 }
@@ -457,7 +483,7 @@ void App_Start(void) {
  * @author Jean-Philippe Gauthier
  * @date   Septembre 2008
  *
- * @param[in] Status  User status to use
+ * @param[in] Status  User status to use (-1:Use error count)
  * 
  * @return Process exit status to be used
  */
@@ -470,11 +496,11 @@ int App_End(int Status) {
    // on a MPI deadlock where we wait for a reduce and the other nodes are stuck on a BCast, for example
    if (App->NbMPI>1 && Status!=INT_MIN) {
       if( !App->RankMPI ) {
-         MPI_Reduce(MPI_IN_PLACE,&App->LogWarning,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-         MPI_Reduce(MPI_IN_PLACE,&App->LogError,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+         MPI_Reduce(MPI_IN_PLACE,&App->LogWarning,1,MPI_INT,MPI_SUM,0,App->Comm);
+         MPI_Reduce(MPI_IN_PLACE,&App->LogError,1,MPI_INT,MPI_SUM,0,App->Comm);
       } else {
-         MPI_Reduce(&App->LogWarning,NULL,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-         MPI_Reduce(&App->LogError,NULL,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+         MPI_Reduce(&App->LogWarning,NULL,1,MPI_INT,MPI_SUM,0,App->Comm);
+         MPI_Reduce(&App->LogError,NULL,1,MPI_INT,MPI_SUM,0,App->Comm);
       }
    }
 #endif
@@ -489,21 +515,21 @@ int App_End(int Status) {
       gettimeofday(&end,NULL);
       timersub(&end,&App->Time,&dif);
 
-      App_Log(APP_MUST,"\n-------------------------------------------------------------------------------------\n");
+      App_Log(APP_VERBATIM,"\n-------------------------------------------------------------------------------------\n");
       if (App->Signal) {
-         App_Log(APP_MUST,"Trapped signal : %i\n",App->Signal);         
+         App_Log(APP_VERBATIM,"Trapped signal : %i\n",App->Signal);         
       }
-      App_Log(APP_MUST,"Finish time    : (UTC) %s",ctime(&end.tv_sec));
-      App_Log(APP_MUST,"Execution time : %.4f seconds (%.2f ms logging)\n",(float)dif.tv_sec+dif.tv_usec/1000000.0,App_TimerTime_ms(App->TimerLog));
+      App_Log(APP_VERBATIM,"Finish time    : (UTC) %s",ctime(&end.tv_sec));
+      App_Log(APP_VERBATIM,"Execution time : %.4f seconds (%.2f ms logging)\n",(float)dif.tv_sec+dif.tv_usec/1000000.0,App_TimerTime_ms(App->TimerLog));
 
       
       if (Status!=EXIT_SUCCESS) {
-         App_Log(APP_MUST,"Status         : Error(%i) (%i Errors)\n",Status,App->LogError);
+         App_Log(APP_VERBATIM,"Status         : Error(%i) (%i Errors)\n",Status,App->LogError);
       } else {
-         App_Log(APP_MUST,"Status         : Ok (%i Warnings)\n",App->LogWarning);
+         App_Log(APP_VERBATIM,"Status         : Ok (%i Warnings)\n",App->LogWarning);
       }
 
-      App_Log(APP_MUST,"-------------------------------------------------------------------------------------\n");
+      App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
 
       App_LogClose();
 
@@ -588,6 +614,8 @@ void App_LogOpen(void) {
 */
 void App_LogClose(void) {
 
+   fflush(App->LogStream);
+
    if (App->LogStream && App->LogStream!=stdout && App->LogStream!=stderr) {
       fclose(App->LogStream);
    }
@@ -598,7 +626,7 @@ void App_LogClose(void) {
  * @author Jean-Philippe Gauthier
  * @date   Septembre 2008
  *
- * @param[in]  Level   Niveau d'importance du message (MUST,ERROR,WARNING,INFO,DEBUG,EXTRA)
+ * @param[in]  Level   Niveau d'importance du message (MUST,ALWAYS,FATAL,SYSTEM,ERROR,WARNING,INFO,DEBUG,EXTRA)
  * @param[in]  Format  Format d'affichage du message
  * @param[in]  ...     Liste des variables du message
  *
@@ -644,34 +672,12 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
    struct tm      *lctm;
    va_list         args;
 
-   if (!App->LogStream) {
+   // If not initialized yet
+   if (!App->Tolerance)
+      App_InitEnv();
+
+   if (!App->LogStream)
       App_LogOpen();
-
-      // Some initialisation for code not linking with App
-      App->TimerLog = App_TimerCreate();
-      if (!App->LogLevel[0]) 
-          for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_INFO;
-
-      // Check verbose level of libraries 
-      if ((c=getenv("APP_VERBOSE_RMN"))) {
-         Lib_LogLevel(APP_LIBRMN,c);
-      }
-      if (App->LibsVersion[APP_LIBVGRID] && (c=getenv("APP_VERBOSE_VGRID"))) {
-         Lib_LogLevel(APP_LIBVGRID,c);
-      }
-      if (App->LibsVersion[APP_LIBINTERPV] && (c=getenv("APP_VERBOSE_INTERPV"))) {
-         Lib_LogLevel(APP_LIBINTERPV,c);
-      }
-      if (App->LibsVersion[APP_LIBGEOREF] && (c=getenv("APP_VERBOSE_GEOREF"))) {
-         Lib_LogLevel(APP_LIBGEOREF,c);
-      }
-      if (App->LibsVersion[APP_LIBRPNMPI] && (c=getenv("APP_VERBOSE_RPNMPI"))) {
-         Lib_LogLevel(APP_LIBRPNMPI,c);
-      }
-      if (App->LibsVersion[APP_LIBIRIS] && (c=getenv("APP_VERBOSE_IRIS"))) {
-         Lib_LogLevel(APP_LIBIRIS,c);
-      }
-  }
 
    // Check for once log flag
    if (Level>APP_QUIET) {
@@ -689,12 +695,12 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
    if (Level==APP_ERROR || Level==APP_FATAL) App->LogError++;
 
    // Check if requested level is quiet
-   if (App->LogLevel[Lib]==APP_QUIET && Level>APP_MUST) return;
+   if (App->LogLevel[Lib]==APP_QUIET && Level>APP_VERBATIM) return;
 
    // If this is within the request level
    if (Level<=App->LogLevel[Lib]) {
 
-      if (Level>=0) {
+      if (Level>=APP_ALWAYS) {
          color=App->LogColor?AppLevelColors[Level]:AppLevelColors[APP_INFO];
 
          if (App->LogTime) {
@@ -745,7 +751,7 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
       if (App->LogColor)
          fprintf(App->LogStream,APP_COLOR_RESET);
       
-      if (Level==APP_ERROR || Level==APP_FATAL) {
+      if (Level==APP_ERROR || Level==APP_FATAL || Level==APP_SYSTEM) {
          // On errors, save for extenal to use (ex: Tcl)
          va_start(args,Format);
          vsnprintf(APP_LASTERROR,APP_ERRORSIZE,Format,args);
@@ -756,6 +762,11 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
       }
    }
    App_TimerStop(App->TimerLog);
+
+   // Exit application if error above tolerance level
+   if (App->Tolerance<=Level && (Level==APP_FATAL || Level==APP_SYSTEM)) {
+      App_End(-1);
+   }
 }
 
 /**----------------------------------------------------------------------------
@@ -827,6 +838,16 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
          for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[0];
       }
    }
+   return(App->LogLevel[Lib]);
+}
+
+int App_LogLevelNo(TApp_LogLevel Val) {
+   return(Lib_LogLevelNo(APP_MAIN,Val));
+}
+
+int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
+   if (Val>=APP_FATAL && Val<=APP_QUIET)
+      App->LogLevel[Lib]=Val;
    return(App->LogLevel[Lib]);
 }
 
