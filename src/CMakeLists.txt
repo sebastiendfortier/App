@@ -4,9 +4,6 @@ file(GLOB PROJECT_INCLUDE_FILES *.h)
 file(GLOB PROJECT_C_FILES *.c)
 file(GLOB PROJECT_F_FILES *.f90)
 
-#----- Need to feed the module path When used as a submodule
-set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 #----- Common target dependencies
 foreach(target IN ITEMS App App-ompi)
    add_library(${target} STATIC ${PROJECT_INCLUDE_FILES} ${PROJECT_C_FILES} ${PROJECT_F_FILES})
@@ -22,11 +19,13 @@ endforeach()
 set_target_properties(App PROPERTIES 
    VERSION ${PROJECT_VERSION}
    PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
+   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    POSITION_INDEPENDENT_CODE  ON)
 
 set_target_properties(App-ompi PROPERTIES 
    VERSION ${PROJECT_VERSION}
    PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
+   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    POSITION_INDEPENDENT_CODE  ON
    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}"
    LINK_FLAGS "${MPI_LINK_FLAGS}")
@@ -41,4 +40,3 @@ install(TARGETS App App-ompi
    PUBLIC_HEADER DESTINATION include)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/app.mod TYPE INCLUDE)
-   
