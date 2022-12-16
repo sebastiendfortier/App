@@ -4,6 +4,9 @@ file(GLOB PROJECT_INCLUDE_FILES *.h)
 file(GLOB PROJECT_C_FILES *.c)
 file(GLOB PROJECT_F_FILES *.f90)
 
+#----- Need to feed the module path When used as a submodule
+set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 #----- Common target dependencies
 foreach(target IN ITEMS App App-ompi)
    add_library(${target} STATIC ${PROJECT_INCLUDE_FILES} ${PROJECT_C_FILES} ${PROJECT_F_FILES})

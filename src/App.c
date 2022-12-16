@@ -63,57 +63,6 @@ void App_LibRegister(TApp_Lib Lib,char *Version) {
 }
 
 /**----------------------------------------------------------------------------
- * @brief  Initialiser la structure App
- * @author Jean-Philippe Gauthier
- * @date   Janvier 2017
- *    @param[in]  Type     App type (APP_MASTER=single independent process, APP_THREAD=threaded co-process)
- *    @param[in]  Name     Application name
- *    @param[in]  Version  Application version
- *    @param[in]  Desc     Application description
- *    @param[in]  Stamp    TimeStamp
- *
- *    @return              Parametres de l'application initialisee
-*/
-TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
-  
-   // In coprocess threaded mode, we need a different App object than the master thread
-   App=(Type==APP_THREAD)?(TApp*)malloc(sizeof(TApp)):&AppInstance;
-
-   App->Type=Type;
-   App->Name=Name?strdup(Name):strdup("");
-   App->Version=Version?strdup(Version):strdup("");
-   App->Desc=Desc?strdup(Desc):strdup("");
-   App->TimeStamp=Stamp?strdup(Stamp):strdup("");
-   App->LogFile=strdup("stderr");
-   App->LogStream=(FILE*)NULL;
-   App->Tag=NULL;
-   App->State=APP_STOP;
-   App->Percent=0.0;
-   App->Step=0;
-   App->Affinity=APP_AFFINITY_NONE;
-   App->NbThread=0;
-   App->NbMPI=1;
-   App->RankMPI=0;
-   App->NbNodeMPI=1;
-   App->NodeRankMPI=0;
-   App->CountsMPI=NULL;
-   App->DisplsMPI=NULL;
-   App->OMPSeed=NULL;
-   App->Seed=time(NULL);
-   App->Signal=0;
-
-#ifdef HAVE_MPI
-   App->Comm=MPI_COMM_WORLD;
-   App->NodeComm=MPI_COMM_NULL;
-   App->NodeHeadComm=MPI_COMM_NULL;
-#endif
-
-   App_InitEnv();
-
-   return(App);
-}
-
-/**----------------------------------------------------------------------------
  * @brief  Initialiser l'environnement dans la structure App
  * @author Jean-Philippe Gauthier
  * @date   Decembre 2022
@@ -183,6 +132,57 @@ void App_InitEnv(){
    if ((c=getenv("CMCLNG"))) {
       App->Language=(c[0]=='f' || c[0]=='F')?APP_FR:APP_EN;
    }
+}
+
+/**----------------------------------------------------------------------------
+ * @brief  Initialiser la structure App
+ * @author Jean-Philippe Gauthier
+ * @date   Janvier 2017
+ *    @param[in]  Type     App type (APP_MASTER=single independent process, APP_THREAD=threaded co-process)
+ *    @param[in]  Name     Application name
+ *    @param[in]  Version  Application version
+ *    @param[in]  Desc     Application description
+ *    @param[in]  Stamp    TimeStamp
+ *
+ *    @return              Parametres de l'application initialisee
+*/
+TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
+  
+   // In coprocess threaded mode, we need a different App object than the master thread
+   App=(Type==APP_THREAD)?(TApp*)malloc(sizeof(TApp)):&AppInstance;
+
+   App->Type=Type;
+   App->Name=Name?strdup(Name):strdup("");
+   App->Version=Version?strdup(Version):strdup("");
+   App->Desc=Desc?strdup(Desc):strdup("");
+   App->TimeStamp=Stamp?strdup(Stamp):strdup("");
+   App->LogFile=strdup("stderr");
+   App->LogStream=(FILE*)NULL;
+   App->Tag=NULL;
+   App->State=APP_STOP;
+   App->Percent=0.0;
+   App->Step=0;
+   App->Affinity=APP_AFFINITY_NONE;
+   App->NbThread=0;
+   App->NbMPI=1;
+   App->RankMPI=0;
+   App->NbNodeMPI=1;
+   App->NodeRankMPI=0;
+   App->CountsMPI=NULL;
+   App->DisplsMPI=NULL;
+   App->OMPSeed=NULL;
+   App->Seed=time(NULL);
+   App->Signal=0;
+
+#ifdef HAVE_MPI
+   App->Comm=MPI_COMM_WORLD;
+   App->NodeComm=MPI_COMM_NULL;
+   App->NodeHeadComm=MPI_COMM_NULL;
+#endif
+
+   App_InitEnv();
+
+   return(App);
 }
 
 /**----------------------------------------------------------------------------
@@ -335,7 +335,7 @@ int App_ThreadPlace(void) {
 void App_Start(void) {
 
    char *env=NULL;
-   int print=0,t,th,mpi;
+   int   t,mpi;
 
    // Trap signals (preemption)
    App_Trap(SIGUSR2);
