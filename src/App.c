@@ -392,7 +392,9 @@ void App_Start(void) {
 
    // Modify seed value for current processor/thread for parallelization.
    App->OMPSeed=(int*)calloc(App->NbThread,sizeof(int));
-//TODO   App_LibRegister(APP_LIBRMN,VERSION);
+#ifdef HAVE_RMN
+   App_LibRegister(APP_LIBRMN,HAVE_RMN);
+#endif
 
    if (!App->RankMPI) {
 
