@@ -638,30 +638,12 @@ void App_LogClose(void) {
 */
 void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
 
-  char *s;
-
-   if (Message) {
-      // trim blanks
-      s=(char *)Message+strlen(Message);
-      while(*--s==' ')
-         *s='\0';
-
-      Lib_Log(APP_MAIN,Level,"%s\n",Message);
-   }
+   Lib_Log(APP_MAIN,Level,"%s\n",Message);
 }
 
-void Lib_Log4Fortran(TApp_Lib Lib,TApp_LogLevel Level,const char *Message) {
+void Lib_Log4Fortran(TApp_Lib Lib,TApp_LogLevel Level,char *Message,int len) {
 
-  char *s;
-
-   if (Message) {
-      // trim blanks
-      s=(char *)Message+strlen(Message);
-      while(*--s==' ')
-         *s='\0';
-
-      Lib_Log(Lib,Level,"%s\n",Message);
-   }
+   Lib_Log(Lib,Level,"%s\n",Message);
 }
 
 void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {

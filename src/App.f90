@@ -9,7 +9,7 @@ module app
     end enum
     
     type(C_PTR) :: app_ptr
-    character (len=*) , parameter :: EOL = char(13)//char(11)
+    character(len=*) , parameter :: EOL = char(13)//char(11)
     character(len=1024) :: app_msg  !String to write output messages     
 
     interface
@@ -55,20 +55,20 @@ module app
     end FUNCTION
 
 !    void  App_Log(TApp_LogLevel Level,const char *Format,...);
-    SUBROUTINE app_log(level,msg) BIND(C, name="App_Log4Fortran")
+    SUBROUTINE app_log4fortran(level,msg) BIND(C, name="App_Log4Fortran")
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: level
-        character(C_CHAR), dimension(*) :: msg
+        character(kind=C_CHAR), dimension(*), intent(in) :: msg
     end SUBROUTINE
 
 !    void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
-    SUBROUTINE Lib_Log(lib,level,msg) BIND(C, name="Lib_Log4Fortran")
+    SUBROUTINE lib_log4Fortran(lib,level,msg) BIND(C, name="Lib_Log4Fortran")
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: level
         integer(C_INT), value :: lib
-        character(C_CHAR), dimension(*) :: msg
+        character(kind=C_CHAR), dimension(*), intent(in) :: msg
     end SUBROUTINE
     
 !   void  App_Progress(float Percent,const char *Format,...);
@@ -77,7 +77,7 @@ module app
     integer(C_INT) FUNCTION app_loglevel(level) BIND(C, name="App_LogLevel")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: level
+        character(kind=C_CHAR), dimension(*), intent(in):: level
     end FUNCTION
 
     !   int App_LogLevelNo(TApp_LogLevel Val) {
@@ -92,7 +92,7 @@ module app
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: lib
-        character(C_CHAR), dimension(*) :: level
+        character(kind=C_CHAR), dimension(*), intent(in) :: level
     end FUNCTION
 
     !   int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
@@ -110,8 +110,8 @@ module app
     integer(C_INT) FUNCTION app_parsebool(param,value,var) BIND(C, name="App_ParseBool")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: param
-        character(C_CHAR), dimension(*) :: value
+        character(kind=C_CHAR), dimension(*), intent(in) :: param
+        character(kind=C_CHAR), dimension(*), intent(in) :: value
         type(C_PTR), intent(out) :: var
     end FUNCTION
 
@@ -119,8 +119,8 @@ module app
     integer(C_INT) FUNCTION app_parsedate(param,value,var) BIND(C, name="App_ParseDate")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: param
-        character(C_CHAR), dimension(*) :: value
+        character(kind=C_CHAR), dimension(*), intent(in) :: param
+        character(kind=C_CHAR), dimension(*), intent(in) :: value
         integer(C_LONG), intent(out) :: var
     end FUNCTION
 
@@ -128,8 +128,8 @@ module app
     integer(C_INT) FUNCTION app_parsedatesplit(param,value,year,month,day,hour,min) BIND(C, name="App_ParseDateSplit")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: param
-        character(C_CHAR), dimension(*) :: value
+        character(kind=C_CHAR), dimension(*), intent(in) :: param
+        character(kind=C_CHAR), dimension(*), intent(in) :: value
         integer(C_INT), intent(out) :: year
         integer(C_INT), intent(out) :: month
         integer(C_INT), intent(out) :: day
@@ -141,8 +141,8 @@ module app
     integer(C_INT) FUNCTION app_parsecoords(param,value,lat,lon,index) BIND(C, name="App_ParseCoords")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: param
-        character(C_CHAR), dimension(*) :: value
+        character(kind=C_CHAR), dimension(*), intent(in) :: param
+        character(kind=C_CHAR), dimension(*), intent(in) :: value
         integer(C_INT), intent(out) :: lat
         integer(C_INT), intent(out) :: lon
         integer(C_INT), value :: index
@@ -199,4 +199,36 @@ module app
         use, intrinsic :: iso_c_binding
     end FUNCTION
 end interface
+
+contains
+    SUBROUTINE app_log(level,msg)
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer :: level
+        integer :: i
+        character(len=*) :: msg
+
+!        character(kind=C_CHAR), dimension(1024) :: c_msg
+!        do i = 1, len_trim(msg)
+!            c_msg(i) = msg(i:i)
+!         end do
+               
+        i=len_trim(msg)
+        msg(i+1:i+1)=C_NULL_CHAR
+        call app_log4fortran(level,msg)
+        msg=""
+    end SUBROUTINE
+
+    SUBROUTINE lib_log(lib,level,msg)
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer :: level
+        integer :: lib
+        integer :: i
+        character(len=*) :: msg
+        i=len_trim(msg)
+        msg(i+1:i+1)=C_NULL_CHAR
+        call lib_log4fortran(lib,level,msg)
+        msg=""
+    end SUBROUTINE
 end module
