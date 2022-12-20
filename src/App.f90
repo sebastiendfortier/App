@@ -36,10 +36,10 @@ module app
     end SUBROUTINE
 
 !   void App_LibRegister(char *Lib,char *Version) {
-    SUBROUTINE app_libregister(name,version) BIND(C, name="App_LibRegister")
+    SUBROUTINE app_libregister(lib,version) BIND(C, name="App_LibRegister")
         use, intrinsic :: iso_c_binding
         implicit none
-        character(C_CHAR), dimension(*) :: name
+        integer(C_INT), value :: lib
         character(C_CHAR), dimension(*) :: version
     end SUBROUTINE
 
