@@ -518,6 +518,7 @@ int App_End(int Status) {
       timersub(&end,&App->Time,&dif);
 
       App_Log(APP_VERBATIM,"\n-------------------------------------------------------------------------------------\n");
+      App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
       if (App->Signal) {
          App_Log(APP_VERBATIM,"Trapped signal : %i\n",App->Signal);         
       }
@@ -741,6 +742,10 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
          vsnprintf(APP_LASTERROR,APP_ERRORSIZE,Format,args);
          va_end(args);
      
+         // On system error 
+         if (Level==APP_SYSTEM) {
+            perror(APP_LASTERROR);
+         }
          // Force flush on error to garantee we'll see it
          fflush(App->LogStream);
       }
