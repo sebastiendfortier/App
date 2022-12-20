@@ -9,6 +9,7 @@ module app
     end enum
     
     type(C_PTR) :: app_ptr
+    integer :: app_status
     character(len=*) , parameter :: EOL = char(13)//char(11)
     character(len=1024) :: app_msg  !String to write output messages     
 
