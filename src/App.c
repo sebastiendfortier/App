@@ -127,6 +127,15 @@ void App_InitEnv(){
    if (App->LibsVersion[APP_LIBIRIS] && (c=getenv("APP_VERBOSE_IRIS"))) {
       Lib_LogLevel(APP_LIBIRIS,c);
    }
+   if (App->LibsVersion[APP_LIBMDLUTIL] && (c=getenv("APP_VERBOSE_MDLUTIL"))) {
+      Lib_LogLevel(APP_LIBMDLUTIL,c);
+   }
+   if (App->LibsVersion[APP_LIBGEMDYN] && (c=getenv("APP_VERBOSE_GEMDYN"))) {
+      Lib_LogLevel(APP_LIBGEMDYN,c);
+   }
+   if (App->LibsVersion[APP_LIBRPNPHY] && (c=getenv("APP_VERBOSE_RPNPHY"))) {
+      Lib_LogLevel(APP_LIBRPNPHY,c);
+   }
 
    // Check the language in the environment 
    if ((c=getenv("CMCLNG"))) {
