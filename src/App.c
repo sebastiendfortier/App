@@ -527,7 +527,7 @@ int App_End(int Status) {
       timersub(&end,&App->Time,&dif);
 
       App_Log(APP_VERBATIM,"\n-------------------------------------------------------------------------------------\n");
-      App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
+      App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n\n",App->Name,App->Version,App->TimeStamp);
       if (App->Signal) {
          App_Log(APP_VERBATIM,"Trapped signal : %i\n",App->Signal);         
       }
