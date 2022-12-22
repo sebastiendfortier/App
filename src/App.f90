@@ -11,7 +11,7 @@ module app
     type(C_PTR) :: app_ptr
     integer :: app_status
     character(len=*) , parameter :: EOL = char(13)//char(11)
-    character(len=1024) :: app_msg  !String to write output messages     
+    character(len=4096) :: app_msg  !String to write output messages     
 
     interface
 
@@ -208,16 +208,12 @@ contains
         integer :: level
         integer :: i
         character(len=*) :: msg
-
-!        character(kind=C_CHAR), dimension(1024) :: c_msg
-!        do i = 1, len_trim(msg)
-!            c_msg(i) = msg(i:i)
-!         end do
+        character(len=4097) :: c_msg
                
         i=len_trim(msg)
-        msg(i+1:i+1)=C_NULL_CHAR
-        call app_log4fortran(level,msg)
-        msg=""
+        c_msg=msg
+        c_msg(i+1:i+1)=C_NULL_CHAR
+        call app_log4fortran(level,c_msg)
     end SUBROUTINE
 
     SUBROUTINE lib_log(lib,level,msg)
@@ -227,8 +223,11 @@ contains
         integer :: lib
         integer :: i
         character(len=*) :: msg
+        character(len=4097) :: c_msg
+
         i=len_trim(msg)
-        msg(i+1:i+1)=C_NULL_CHAR
+        c_msg=msg
+        c_msg(i+1:i+1)=C_NULL_CHAR
         call lib_log4fortran(lib,level,msg)
         msg=""
     end SUBROUTINE
