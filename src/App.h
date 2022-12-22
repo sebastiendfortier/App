@@ -124,6 +124,7 @@ typedef struct TApp {
 //   char*          TmpDir;               ///< Tmp directory
    char*          Tag;                   ///< Identificateur
    FILE*          LogStream;             ///< Log file associated stream
+   int            LogRank;               ///< Force log from a single rank
    int            LogWarning;            ///< Number of warnings
    int            LogError;              ///< Number of errors
    int            LogColor;              ///< Use coloring in the logs

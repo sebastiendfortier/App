@@ -28,8 +28,8 @@ static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessib
 
 static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "vgrid", "interpv", "georef", "rpnmpi", "iris", "mdlutil", "gemdyn", "rpnphy" };
 static char* AppLibLog[]      = { "","RMN:", "FST:", "WB:", "VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:", "MDLUTIL:", "GEMDYN:", "RPNPHY:" };
-static char* AppLevelNames[]  = { "INFO", "FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
-static char* AppLevelColors[] = { "",APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
+static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
+static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
 char* App_ErrorGet(void) {                       //< Return last error
    return(APP_LASTERROR);
@@ -82,6 +82,7 @@ void App_InitEnv(){
    App->LogColor=FALSE;
    App->LogTime=FALSE;
    App->LogSplit=FALSE;
+   App->LogRank=-1;
 
    for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_WARNING;
 
@@ -94,6 +95,9 @@ void App_InitEnv(){
    }
    if ((c=getenv("APP_VERBOSETIME"))) {
       App_LogTime(c);
+   }
+   if ((c=getenv("APP_VERBOSERANK"))) {
+      App->LogRank=atoi(c);
    }
    if ((c=getenv("APP_LOGSPLIT"))) {
       App->LogSplit=TRUE;
@@ -665,6 +669,12 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
    struct timeval  now,diff;
    struct tm      *lctm;
    va_list         args;
+
+#ifdef HAVE_MPI
+   if (App->LogRank!=-1 && App->LogRank!=App->RankMPI) {
+      return;
+   }
+#endif
 
    // If not initialized yet
    if (!App->Tolerance)
