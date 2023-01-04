@@ -27,7 +27,7 @@ __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
 static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy" };
-static char* AppLibLog[]      = { "","RMN>", "FST>", "WB>", "VGRID>","INTERPV>","GEOREF>","RPNMPI>","IRIS>", "IO>", "MDLUTIL>", "GEMDYN>", "RPNPHY>" };
+static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|" };
 static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
 static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
@@ -417,7 +417,7 @@ void App_Start(void) {
       App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
       App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
 
-      App_Log(APP_VERBATIM,"Libraries      :\n");
+      if (App->LibsVersion[0]) App_Log(APP_VERBATIM,"Libraries      :\n");
       for(t=1;t<APP_LIBSMAX;t++) {
          if (App->LibsVersion[t])
             App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
