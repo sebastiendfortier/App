@@ -26,14 +26,16 @@ This packages manages various standard tasks needed by applications like:
     - Some parallel process management
 
 ** Environment variables
-- APP_PARAMS       : List of parameters for the application (instead of giving on command line) 
-- APP_VERBOSE      : Define global verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA,QUIET or 0-5) default:INFO
-- APP_VERBOSE_[lib]: Verbose level per library, overrides global (lib=[RMN,VGRID,INTERPV,GEOREF,RPNMPI,IRIS])
-- APP_VERBOSECOLOR : Use color in log messages
-- APP_VERBOSETIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
-- APP_LOGSPLIT     : Split log stream/file per MPI PE
-- APP_LOGSTREAM    : Define log stream/file (stdout,stderr,filename) default:stderr
-  
+- APP_PARAMS        : List of parameters for the application (instead of giving on command line) 
+- APP_VERBOSE       : Define global verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA,QUIET or 0-5) default:INFO
+- APP_VERBOSE_[lib] : Verbose level per library, overrides global (lib=[RMN,FST,WB,VGRID,INTERPV,GEOREF,RPNMPI,IRIS,IO])
+- APP_VERBOSE_COLOR : Use color in log messages
+- APP_VERBOSE_TIME  : Display time for each message (NONE,DATETIME,TIME,SECOND,MSECOND, or 0-4) default:NONE
+- APP_VERBOSE_UTC   : Display time in UTC
+- APP_VERBOSE_RANK  : Enable log on a specific rank default:-1 (all rank)
+- APP_LOG_SPLIT     : Split log stream/file per MPI PE
+- APP_LOG_STREAM    : Define log stream/file (stdout,stderr,filename) default:stderr
+   
 - CMCLNG           : Language to use (francais,english)
 - OMP_NUM_THREADS  : Number of openMP threads (for internal purposes)
 

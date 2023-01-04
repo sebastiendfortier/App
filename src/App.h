@@ -134,6 +134,7 @@ typedef struct TApp {
    TApp_State     State;                 ///< State of application
    TApp_Lang      Language;              ///< Language (default: $CMCLNG or APP_EN)
    double         Percent;               ///< Percentage of execution done (0=not started, 100=finished)
+   int            UTC;                   ///< Use UTC or local time
    struct timeval Time;                  ///< Timer for execution time
    int            Type;                  ///< App object type (APP_MASTER,APP_THREAD)
    int            Step;                  ///< Model step

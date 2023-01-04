@@ -27,7 +27,7 @@ __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
 static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy" };
-static char* AppLibLog[]      = { "","RMN:", "FST:", "WB:", "VGRID:","INTERPV:","GEOREF:","RPNMPI:","IRIS:", "IO:", "MDLUTIL:", "GEMDYN:", "RPNPHY:" };
+static char* AppLibLog[]      = { "","RMN>", "FST>", "WB>", "VGRID>","INTERPV>","GEOREF>","RPNMPI>","IRIS>", "IO>", "MDLUTIL>", "GEMDYN>", "RPNPHY>" };
 static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
 static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
@@ -90,19 +90,22 @@ void App_InitEnv(){
    if ((c=getenv("APP_VERBOSE"))) {
       App_LogLevel(c);
    }
-   if ((c=getenv("APP_VERBOSECOLOR"))) {
+   if ((c=getenv("APP_VERBOSE_COLOR"))) {
       App->LogColor=TRUE;
    }
-   if ((c=getenv("APP_VERBOSETIME"))) {
+   if ((c=getenv("APP_VERBOSE_TIME"))) {
       App_LogTime(c);
    }
-   if ((c=getenv("APP_VERBOSERANK"))) {
+   if ((c=getenv("APP_VERBOSE_UTC"))) {
+      App->UTC=TRUE;
+   }
+   if ((c=getenv("APP_VERBOSE_RANK"))) {
       App->LogRank=atoi(c);
    }
-   if ((c=getenv("APP_LOGSPLIT"))) {
+   if ((c=getenv("APP_LOG_SPLIT"))) {
       App->LogSplit=TRUE;
    }
-   if ((c=getenv("APP_LOGSTREAM"))) {
+   if ((c=getenv("APP_LOG_STREAM"))) {
       App->LogFile=strdup(c);
    }
    
@@ -420,7 +423,11 @@ void App_Start(void) {
             App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
       }
 
-      App_Log(APP_VERBATIM,"\nStart time     : (UTC) %s",ctime(&App->Time.tv_sec));
+      if (App->UTC) {
+         App_Log(APP_VERBATIM,"\nStart time     : (UTC) %s",asctime(gmtime(&App->Time.tv_sec)));
+      } else {
+         App_Log(APP_VERBATIM,"\nStart time     : %s",ctime(&App->Time.tv_sec));
+      }
 
 #ifdef HAVE_OPENMP
       if (App->NbThread>1) {
@@ -535,7 +542,11 @@ int App_End(int Status) {
       if (App->Signal) {
          App_Log(APP_VERBATIM,"Trapped signal : %i\n",App->Signal);         
       }
-      App_Log(APP_VERBATIM,"Finish time    : (UTC) %s",ctime(&end.tv_sec));
+      if (App->UTC) {
+         App_Log(APP_VERBATIM,"Finish time    : (UTC) %s",asctime(gmtime(&end.tv_sec)));
+      } else {
+         App_Log(APP_VERBATIM,"Finish time    : %s",ctime(&end.tv_sec));
+      }
       App_Log(APP_VERBATIM,"Execution time : %.4f seconds (%.2f ms logging)\n",(float)dif.tv_sec+dif.tv_usec/1000000.0,App_TimerTime_ms(App->TimerLog));
 
       
@@ -712,12 +723,12 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
 
             switch(App->LogTime) {
                case APP_DATETIME:
-                  lctm=localtime(&now.tv_sec);
+                  lctm=App->UTC?gmtime(&now.tv_sec):localtime(&now.tv_sec);
                   strftime(time,32,"%c ",lctm);
                   break;
                case APP_TIME:
                   timersub(&now,&App->Time,&diff);
-                  lctm=localtime(&diff.tv_sec);
+                  lctm=App->UTC?gmtime(&diff.tv_sec):localtime(&diff.tv_sec);
                   strftime(time,32,"%T ",lctm);
                   break;
                case APP_SECOND:
