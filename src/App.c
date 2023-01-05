@@ -26,8 +26,8 @@ static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
-static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy" };
-static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|" };
+static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy" };
+static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|" };
 static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
 static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
