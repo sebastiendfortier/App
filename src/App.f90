@@ -228,6 +228,6 @@ contains
         i=len_trim(msg)
         c_msg=msg
         c_msg(i+1:i+1)=C_NULL_CHAR
-        call lib_log4fortran(lib,level,msg)
+        call lib_log4fortran(lib,level,c_msg)
     end SUBROUTINE
 end module
