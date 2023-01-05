@@ -108,6 +108,9 @@ void App_InitEnv(){
    if ((c=getenv("APP_LOG_STREAM"))) {
       App->LogFile=strdup(c);
    }
+   if ((c=getenv("APP_TOLERANCE"))) {
+      App_ToleranceLevel(c);
+   }
    
    // Check verbose level of libraries 
    if ((c=getenv("APP_VERBOSE_RMN"))) {
@@ -784,7 +787,7 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
 
    // Exit application if error above tolerance level
    if (App->Tolerance<=Level && (Level==APP_FATAL || Level==APP_SYSTEM)) {
-      App_End(-1);
+      exit(App_End(-1));
    }
 }
 
@@ -822,16 +825,24 @@ void App_Progress(float Percent,const char *Format,...) {
 }
 
 /**----------------------------------------------------------------------------
- * @brief  Definir le niveau de log courant
+ * @brief  Definir le niveau de log courant pour l'application et les librairies
  * @author Jean-Philippe Gauthier
  * @date   Septembre 2008
  *
- * @param[in]  Val     Niveau de log a traiter
+ * @param[in]  Val     Niveau de log a traiter ("ERROR","SYSTEM","FATAL","WARNING","INFO","DEBUG","EXTRA","QUIET")
  */
 int App_LogLevel(char *Val) {
    return(Lib_LogLevel(APP_MAIN,Val));
 }
 
+/**----------------------------------------------------------------------------
+ * @brief  Definir le niveau de log courant pour une librairie
+ * @author Jean-Philippe Gauthier
+ * @date   Octobre 2022
+ *
+ * @param[in]  Lib     Librairie
+ * @param[in]  Val     Niveau de log a traiter ("ERROR","SYSTEM","FATAL","WARNING","INFO","DEBUG","EXTRA","QUIET")
+ */
 int Lib_LogLevel(TApp_Lib Lib,char *Val) {
 
    char *endptr=NULL;
@@ -860,14 +871,70 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
    return(App->LogLevel[Lib]);
 }
 
+/**----------------------------------------------------------------------------
+ * @brief  Definir le niveau de log courant pour l'application
+ * @author Jean-Philippe Gauthier
+ * @date   Octobre 2022
+ *
+ * @param[in]  Val     Niveau de log a traiter (int)
+ */
 int App_LogLevelNo(TApp_LogLevel Val) {
    return(Lib_LogLevelNo(APP_MAIN,Val));
 }
 
+/**----------------------------------------------------------------------------
+ * @brief  Definir le niveau de log courant pour une librairie
+ * @author Jean-Philippe Gauthier
+ * @date   Octobre 2022
+ *
+ * @param[in]  Lib     Librairie
+ * @param[in]  Val     Niveau de log a traiter (int)
+ */
 int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
    if (Val>=APP_FATAL && Val<=APP_QUIET)
       App->LogLevel[Lib]=Val;
    return(App->LogLevel[Lib]);
+}
+
+/**----------------------------------------------------------------------------
+ * @brief  Definir le niveau de tolerance aux erreur pour l'application
+ * @author Jean-Philippe Gauthier
+ * @date   Octobre 2022
+ *
+ * @param[in]  Val     Niveau de tolerance ("ERROR","SYSTEM","FATAL","QUIET")
+ */
+int App_ToleranceLevel(char *Val) {
+
+   char *endptr=NULL;
+   int  l;
+   
+   if (Val && strlen(Val)) {
+      if (strncasecmp(Val,"ERROR",5)==0) {
+         App->Tolerance=APP_ERROR;
+      } else if (strncasecmp(Val,"SYSTEM",6)==0) {
+         App->Tolerance=APP_SYSTEM;
+      } else if (strncasecmp(Val,"FATAL",5)==0) {
+         App->Tolerance=APP_FATAL;
+      } else if (strncasecmp(Val,"QUIET",5)==0) {
+         App->Tolerance=APP_QUIET;
+      } else {
+         App->Tolerance=strtoul(Val,&endptr,10);
+      }
+   }
+   return(App->Tolerance);
+}
+
+/**----------------------------------------------------------------------------
+ * @brief  Definir le niveau de tolerance aux erreur pour l'application
+ * @author Jean-Philippe Gauthier
+ * @date   Octobre 2022
+ *
+ * @param[in]  Val     Niveau de tolerance (int)
+ */
+int App_ToleranceNo(TApp_LogLevel Val) {
+   if (Val>=APP_FATAL && Val<=APP_QUIET)
+      App->Tolerance=Val;
+   return(App->Tolerance);
 }
 
 /**----------------------------------------------------------------------------
@@ -938,7 +1005,7 @@ void App_PrintArgs(TApp_Arg *AArgs,char *Token,int Flags) {
    if (Flags&APP_ARGSLOG)    printf("\n\t    --%-15s %s",      "logsplit","Split log file per MPI rank");
    if (Flags&APP_ARGSLANG)   printf("\n\t-%s, --%-15s %s","a", "language","Language ("APP_COLOR_GREEN"$CMCLNG"APP_COLOR_RESET",english,francais)");
    
-   printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA,QUIET or 1-6)");
+   printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA,QUIET)");
    printf("\n\t    --%-15s %s",      "verbosetime",  "Display time in logs ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",DATETIME,TIME,SECOND,MSECOND)");
    printf("\n\t    --%-15s %s",      "verboseutc", "Use UTC for time");
    printf("\n\t    --%-15s %s",      "verbosecolor", "Use color for log messages");

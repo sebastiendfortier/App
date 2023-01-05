@@ -176,6 +176,8 @@ int   Lib_LogLevel(TApp_Lib Lib,char *Val);
 int   Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val);
 int   App_LogLevel(char *Val);
 int   App_LogLevelNo(TApp_LogLevel Val);
+int   App_ToleranceLevel(char *Val);
+int   App_ToleranceNo(TApp_LogLevel Val);
 void  App_LogOpen(void);
 void  App_LogClose(void);
 int   App_LogTime(char *Val);
