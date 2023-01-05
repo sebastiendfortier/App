@@ -8,11 +8,11 @@ module app
        enumerator :: APP_MASTER=0, APP_THREAD=1
     end enum
     
-    type(C_PTR) :: app_ptr
-    integer :: app_status
-    character(len=*) , parameter :: EOL = char(13)//char(11)
+    type(C_PTR) :: app_ptr          !Global (opaque) app structure pointer
+    integer :: app_status           !To recuperate application status
     character(len=4096) :: app_msg  !String to write output messages     
-
+    character(len=*) , parameter :: EOL = char(13)//char(11)
+ 
     interface
 
     ! 
@@ -229,6 +229,5 @@ contains
         c_msg=msg
         c_msg(i+1:i+1)=C_NULL_CHAR
         call lib_log4fortran(lib,level,msg)
-        msg=""
     end SUBROUTINE
 end module
