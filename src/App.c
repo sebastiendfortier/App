@@ -940,6 +940,7 @@ void App_PrintArgs(TApp_Arg *AArgs,char *Token,int Flags) {
    
    printf("\n\t-%s, --%-15s %s","v", "verbose",      "Verbose level (ERROR,WARNING,"APP_COLOR_GREEN"INFO"APP_COLOR_RESET",DEBUG,EXTRA,QUIET or 1-6)");
    printf("\n\t    --%-15s %s",      "verbosetime",  "Display time in logs ("APP_COLOR_GREEN"NONE"APP_COLOR_RESET",DATETIME,TIME,SECOND,MSECOND)");
+   printf("\n\t    --%-15s %s",      "verboseutc", "Use UTC for time");
    printf("\n\t    --%-15s %s",      "verbosecolor", "Use color for log messages");
    printf("\n\t-%s, --%-15s %s","h", "help",         "Help info");   
    printf("\n");
@@ -1096,6 +1097,8 @@ int App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags) {
             if ((ner=ok=(i<argc && argv[i][0]!='-'))) {
                App_LogTime(env?strtok(str," "):argv[i]);
             }
+         } else if (!strcasecmp(tok,"--verboseutc")) {                                            // Use UTC time in log messages
+            App->UTC=TRUE;
          } else if (!strcasecmp(tok,"--verbosecolor")) {                                          // Use color in log messages
             App->LogColor=TRUE;
          } else if (!strcasecmp(tok,"-h") || !strcasecmp(tok,"--help")) {                         // Help

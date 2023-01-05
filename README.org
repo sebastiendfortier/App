@@ -11,6 +11,7 @@ This packages manages various standard tasks needed by applications like:
             --logsplit        Split log file per MPI rank
         -v, --verbose         Verbose level (ERROR,WARNING,INFO,DEBUG,EXTRA or 0-4)
             --verbosetime     Display time in logs (NONE,DATETIME,TIME,SECOND,MSECOND)
+            --verboseutc      Use UTC time
             --verbosecolor    Use color for log messages
         -h, --help            Help info
 #+end_src
