@@ -112,7 +112,7 @@ void App_InitEnv(){
       App_ToleranceLevel(c);
    }
    
-   // Check verbose level of libraries 
+  // Check verbose level of libraries 
    if ((c=getenv("APP_VERBOSE_RMN"))) {
       Lib_LogLevel(APP_LIBRMN,c);
    }
@@ -121,6 +121,9 @@ void App_InitEnv(){
    }
    if ((c=getenv("APP_VERBOSE_WB"))) {
       Lib_LogLevel(APP_LIBWB,c);
+   }
+   if ((c=getenv("APP_VERBOSE_GMM"))) {
+      Lib_LogLevel(APP_LIBGMM,c);
    }
    if (App->LibsVersion[APP_LIBVGRID] && (c=getenv("APP_VERBOSE_VGRID"))) {
       Lib_LogLevel(APP_LIBVGRID,c);
@@ -136,6 +139,9 @@ void App_InitEnv(){
    }
    if (App->LibsVersion[APP_LIBIRIS] && (c=getenv("APP_VERBOSE_IRIS"))) {
       Lib_LogLevel(APP_LIBIRIS,c);
+   }
+   if (App->LibsVersion[APP_LIBIO] && (c=getenv("APP_VERBOSE_IO"))) {
+      Lib_LogLevel(APP_LIBIO,c);
    }
    if (App->LibsVersion[APP_LIBMDLUTIL] && (c=getenv("APP_VERBOSE_MDLUTIL"))) {
       Lib_LogLevel(APP_LIBMDLUTIL,c);
