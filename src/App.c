@@ -385,8 +385,6 @@ void App_Start(void) {
       App->TotalsMPI=(int*)malloc((App->NbMPI+1)*sizeof(int));
       App->CountsMPI=(int*)malloc((App->NbMPI+1)*sizeof(int));
       App->DisplsMPI=(int*)malloc((App->NbMPI+1)*sizeof(int));
-
-      App_NodeGroup();
    }
 #endif
 
