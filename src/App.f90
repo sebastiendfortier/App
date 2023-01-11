@@ -199,6 +199,13 @@ module app
     integer(C_INT) FUNCTION app_nodegroup() BIND(C, name="App_NodeGroup")
         use, intrinsic :: iso_c_binding
     end FUNCTION
+
+!   void App_SetMPIComm(MPI_Comm Comm);
+    SUBROUTINE app_setmpicomm(comm) BIND(C, name="App_SetMPIComm")
+        use, intrinsic :: iso_c_binding
+        integer(C_INT), value :: comm
+    end SUBROUTINE
+   
 end interface
 
 contains

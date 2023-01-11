@@ -47,6 +47,10 @@ int App_IsAloneNode(void)  { return(App->NbNodeMPI==1); }
 int App_MPIProcCmp(const void *a,const void *b) {
     return strncmp((const char*)a,(const char*)b,MPI_MAX_PROCESSOR_NAME);
 }
+
+void App_SetMPIComm(MPI_Comm Comm) {
+   App->Comm=Comm;
+}
 #endif
 
 /**----------------------------------------------------------------------------
@@ -84,6 +88,7 @@ void App_InitEnv(){
    App->LogSplit=FALSE;
    App->LogRank=-1;
 
+   // Default log level is WARNING
    for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_WARNING;
 
    // Check the log parameters in the environment 
@@ -300,6 +305,49 @@ int App_NodeGroup() {
    return APP_OK;
 }
 
+int App_NodePrint() {
+
+   if (App_IsMPI()) {
+#ifdef HAVE_MPI
+      char *n,*nodes,node[MPI_MAX_PROCESSOR_NAME]={'\0'};;
+      int   i,cnt;
+      
+      if (!App->RankMPI) {
+
+         nodes = calloc(MPI_MAX_PROCESSOR_NAME*App->NbMPI,sizeof(*nodes));
+
+         if( nodes ) {
+            // Get the physical node unique name of mpi procs
+            APP_MPI_CHK( MPI_Get_processor_name(nodes,&i) );
+            APP_MPI_CHK( MPI_Gather(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,nodes,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,0,App->Comm) );
+
+            // Sort the names
+            qsort(nodes,App->NbMPI,MPI_MAX_PROCESSOR_NAME,App_MPIProcCmp);
+
+            // Print the node names with a count of MPI per nodes
+            App_Log(APP_VERBATIM,"MPI nodes      :");
+            for(i=1,cnt=1,n=nodes; i<App->NbMPI; ++i,n+=MPI_MAX_PROCESSOR_NAME) {
+               if( strncmp(n,n+MPI_MAX_PROCESSOR_NAME,MPI_MAX_PROCESSOR_NAME) ) {
+                  App_Log(APP_VERBATIM,"%s%.*s (%d)",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
+                  cnt = 1;
+               } else {
+                  ++cnt;
+               }
+            }
+            App_Log(APP_VERBATIM,"%s%.*s (%d)\n",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
+
+            free(nodes);
+         }
+      } else {
+         // Send the node name (hostname)
+         APP_MPI_CHK( MPI_Get_processor_name(node,&i) );
+         APP_MPI_CHK( MPI_Gather(node,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,NULL,0,MPI_DATATYPE_NULL,0,App->Comm) );
+      }
+#endif
+   }
+   return(APP_OK);
+}
+
 /**----------------------------------------------------------------------------
  * @brief  Initialiser l'emplacement des threads
  * @author Jean-Philippe Gauthier
@@ -452,51 +500,16 @@ void App_Start(void) {
 #endif //HAVE_OPENMP
 
       if (App->NbMPI>1) {
+#ifdef HAVE_MPI
 #if defined MPI_VERSION && defined MPI_SUBVERSION
          // MPI specification version
          App_Log(APP_VERBATIM,"MPI processes  : %i (Standard: %d.%d)\n",App->NbMPI,MPI_VERSION,MPI_SUBVERSION);
 #else
          App_Log(APP_VERBATIM,"MPI processes  : %i\n",App->NbMPI);
 #endif
-#ifdef HAVE_MPI
-         char *nodes,*n;
-         int i,cnt;
-
-         nodes = calloc(MPI_MAX_PROCESSOR_NAME*App->NbMPI,sizeof(*nodes));
-
-         if( nodes ) {
-             // Get the physical node unique name of mpi procs
-             APP_MPI_CHK( MPI_Get_processor_name(nodes,&i) );
-             APP_MPI_CHK( MPI_Gather(MPI_IN_PLACE,0,MPI_DATATYPE_NULL,nodes,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,0,App->Comm) );
-
-             // Sort the names
-             qsort(nodes,App->NbMPI,MPI_MAX_PROCESSOR_NAME,App_MPIProcCmp);
-
-             // Print the node names with a count of MPI per nodes
-             App_Log(APP_VERBATIM,"MPI nodes      :");
-             for(i=1,cnt=1,n=nodes; i<App->NbMPI; ++i,n+=MPI_MAX_PROCESSOR_NAME) {
-                 if( strncmp(n,n+MPI_MAX_PROCESSOR_NAME,MPI_MAX_PROCESSOR_NAME) ) {
-                     App_Log(APP_VERBATIM,"%s%.*s (%d)",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
-                     cnt = 1;
-                 } else {
-                     ++cnt;
-                 }
-             }
-             App_Log(APP_VERBATIM,"%s%.*s (%d)\n",i!=cnt?", ":" ",(int)MPI_MAX_PROCESSOR_NAME,n,cnt);
-
-             free(nodes);
-         }
 #endif //HAVE_MPI
       }
       App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n\n");
-   } else {
-       // Send the node name (hostname)
-#ifdef HAVE_MPI
-       int i;
-       char node[MPI_MAX_PROCESSOR_NAME]={'\0'};
-       APP_MPI_CHK( MPI_Get_processor_name(node,&i) );
-       APP_MPI_CHK( MPI_Gather(node,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,NULL,0,MPI_DATATYPE_NULL,0,App->Comm) );
-#endif //HAVE_MPI
    }
 
    // Make sure the header is printed before any other messages from other MPI tasks
@@ -869,7 +882,7 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
          App->LogLevel[Lib]=strtoul(Val,&endptr,10);
       }
       if (Lib==APP_MAIN) {
-         for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[0];
+         for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[APP_MAIN];
       }
    }
    return(App->LogLevel[Lib]);
