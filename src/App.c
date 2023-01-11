@@ -28,8 +28,8 @@ static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessib
 
 static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy" };
 static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|" };
-static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","DEBUG","EXTRA" };
-static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
+static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","TRIVIAL","DEBUG","EXTRA" };
+static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
 char* App_ErrorGet(void) {                       //< Return last error
    return(APP_LASTERROR);
@@ -311,7 +311,7 @@ int App_NodePrint() {
 #ifdef HAVE_MPI
       char *n,*nodes,node[MPI_MAX_PROCESSOR_NAME]={'\0'};;
       int   i,cnt;
-      
+
       if (!App->RankMPI) {
 
          nodes = calloc(MPI_MAX_PROCESSOR_NAME*App->NbMPI,sizeof(*nodes));
