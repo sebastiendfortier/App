@@ -872,6 +872,8 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
          App->LogLevel[Lib]=APP_WARNING;
       } else if (strncasecmp(Val,"INFO",5)==0) {
          App->LogLevel[Lib]=APP_INFO;
+      } else if (strncasecmp(Val,"TRIVIAL",7)==0) {
+         App->LogLevel[Lib]=APP_TRIVIAL;
       } else if (strncasecmp(Val,"DEBUG",5)==0) {
          App->LogLevel[Lib]=APP_DEBUG;
       } else if (strncasecmp(Val,"EXTRA",5)==0) {
