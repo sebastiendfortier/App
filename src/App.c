@@ -472,7 +472,7 @@ void App_Start(void) {
       App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
       App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
 
-      if (App->LibsVersion[0]) App_Log(APP_VERBATIM,"Libraries      :\n");
+      if (App->LibsVersion[1]) App_Log(APP_VERBATIM,"Libraries      :\n");
       for(t=1;t<APP_LIBSMAX;t++) {
          if (App->LibsVersion[t])
             App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
