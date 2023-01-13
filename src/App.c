@@ -571,7 +571,7 @@ int App_End(int Status) {
 
       
       if (Status!=EXIT_SUCCESS) {
-         App_Log(APP_VERBATIM,"Status         : Error(%i) (%i Errors)\n",Status,App->LogError);
+         App_Log(APP_VERBATIM,"Status         : Error(%i) (%i Errors) (%i Warnings)\n",Status,App->LogError,App->LogWarning);
       } else {
          App_Log(APP_VERBATIM,"Status         : Ok (%i Warnings)\n",App->LogWarning);
       }
