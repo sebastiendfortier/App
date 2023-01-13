@@ -201,7 +201,7 @@ build:ubuntu-18.04-amd64_gnu-9.3.0:
       - mkdir build_ubuntu-18.04-amd64_gnu-9.3.0
       - cd build_ubuntu-18.04-amd64_gnu-9.3.0
       - cmake ../
-      - time make -j $NCPUS
+      - time make -j 1
    artifacts:
       expire_in: 4 hrs
       paths:
@@ -299,7 +299,7 @@ build:ubuntu-20.04-amd64_gnu-9.3.0:
       - mkdir build_ubuntu-20.04-amd64_gnu-9.3.0
       - cd build_ubuntu-20.04-amd64_gnu-9.3.0
       - cmake ../
-      - time make -j $NCPUS
+      - time make -j 1
    artifacts:
       expire_in: 4 hrs
       paths:

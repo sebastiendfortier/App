@@ -44,21 +44,38 @@ This packages manages various standard tasks needed by applications like:
 ** Example output log
 #+begin_src
 -------------------------------------------------------------------------------------
-Application    : Interpolate 0.1.0 (2022-11-08T12:31:34Z)
-Lib RMN        : 20.0.0-alpha3-2-g1f0543f-dirty
+Application    : iris 0.0.1 (2023-01-12T19:43:07Z)
+Libraries      :
+   rmn         : 20.0.0-alpha6-dirty
+   vgrid       : 6.9.0
+   georef      : 0.1.0
 
-Start time     : (UTC) Thu Nov 10 22:25:50 2022
+Start time     : Thu Jan 12 19:43:45 2023
+OpenMP threads : 4 (Standard: 201611 -- OpenMP >4.5)
+MPI processes  : 13 (Standard: 3.1)
 -------------------------------------------------------------------------------------
 
-(ERROR) W grid support not enabled, needs to be built with GDAL
-(INFO) Processing TT 2049
-(DEBUG) GeoRef_SetGet: RefFrom : 0x122c200 RefTo: 0x1215760
-(ERROR) Def_GridInterp: Invalid destination
-(ERROR) Interpolate: EZSCINT interpolation problem
+15       P000 (DEBUG) FST|c_xdfopn: c_xdfopn f->xdf_seq=0
+15       P000 (DEBUG) FST|c_xdfopn: fichier existe f->xdf_seq=0
+15       P000 (INFO) IRIS|Iris_Init: Defining MDL0 comm with global rank 1 of size 4
+16       P000 (INFO) IRIS|Iris_Init: Defining MDL1 comm with global rank 5 of size 4
+16       P000 (INFO) IRIS|Iris_Init: Defining MDL2 comm with global rank 9 of size 4
+16       P000 (DEBUG) Iris_WaitForSignal: Thread for MDL0 waiting for MPI_Irecv request from model
+16       P002 (DEBUG) RMN|getenvc2_: NEWDATE_OPTIONS Not found in environment
+16       P002 (TRIVIAL) FST|next_match: Record found at page# 0, record# 2
+22       P003 (DEBUG) FST|Read(1) GRID P@ G1_7_1_0N        1442    1021     1  440871200     15728640       123       120      450      984  E 32  O  1001  1002  1003     0
+22       P003 (DEBUG) FST|c_fstinfx: iun 1 recherche: datev=0 etiket=[            ] ip1=1001 ip2=1002 ip3=1003 typvar=[  ] nomvar=[^^  ]
+22       P003 (TRIVIAL) FST|c_fstinfx: (unit=1) record not found, errcode=-12
+55       P000 (DEBUG) Iris_WaitForSignal: Thread processing message from model 0
+55       P000 (DEBUG) Iris_WaitForSignal: Thread for MDL(0) is done after finalize call
+55       P000 (INFO) IRIS|Iris_Free: Total time spent communicating: 8.612 ms and processing 0.000 ms
+
 -------------------------------------------------------------------------------------
-Finish time    : (UTC) Thu Nov 10 22:25:50 2022
-Execution time : 0.0539 seconds (0.03 ms logging)
-Status         : Error 1 (3 Errors)
+Application    : iris 0.0.1 (2023-01-12T19:43:07Z)
+
+Finish time    : Thu Jan 12 19:43:45 2023
+Execution time : 0.2989 seconds (0.56 ms logging)
+Status         : Ok (0 Warnings)
 -------------------------------------------------------------------------------------
 #+end_src
 
