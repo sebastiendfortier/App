@@ -26,8 +26,8 @@ static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
-static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy" };
-static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|" };
+static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy", "midas" };
+static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|", "MIDAS|" };
 static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","TRIVIAL","DEBUG","EXTRA" };
 static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
@@ -850,7 +850,9 @@ void App_Progress(float Percent,const char *Format,...) {
  * @date   Septembre 2008
  *
  * @param[in]  Val     Niveau de log a traiter ("ERROR","SYSTEM","FATAL","WARNING","INFO","DEBUG","EXTRA","QUIET")
- */
+ * 
+ * @return             Previous log level, or current if no level specified
+*/
 int App_LogLevel(char *Val) {
    return(Lib_LogLevel(APP_MAIN,Val));
 }
@@ -862,12 +864,17 @@ int App_LogLevel(char *Val) {
  *
  * @param[in]  Lib     Librairie
  * @param[in]  Val     Niveau de log a traiter ("ERROR","SYSTEM","FATAL","WARNING","INFO","DEBUG","EXTRA","QUIET")
+ * 
+ * @return             Previous log level, or current if no level specified
  */
 int Lib_LogLevel(TApp_Lib Lib,char *Val) {
 
    char *endptr=NULL;
-   int  l;
+   int  l,pl;
    
+   // Keep previous level
+   pl=App->LogLevel[Lib];
+
    if (Val && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
          App->LogLevel[Lib]=APP_ERROR;
@@ -890,7 +897,8 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
          for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[APP_MAIN];
       }
    }
-   return(App->LogLevel[Lib]);
+   // Return Previous level, or current if Level was NULL or empty string
+   return(pl);
 }
 
 /**----------------------------------------------------------------------------
@@ -899,7 +907,9 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
  * @date   Octobre 2022
  *
  * @param[in]  Val     Niveau de log a traiter (int)
- */
+ * 
+ * @return             Previous log level, or current if no level specified
+*/
 int App_LogLevelNo(TApp_LogLevel Val) {
    return(Lib_LogLevelNo(APP_MAIN,Val));
 }
@@ -911,11 +921,20 @@ int App_LogLevelNo(TApp_LogLevel Val) {
  *
  * @param[in]  Lib     Librairie
  * @param[in]  Val     Niveau de log a traiter (int)
+ * 
+ * @return             Previous log level, or current if no level specified
  */
 int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
+
+   int pl;
+
+   // Keep previous level
+   pl=App->LogLevel[Lib];
+
    if (Val>=APP_FATAL && Val<=APP_QUIET)
       App->LogLevel[Lib]=Val;
-   return(App->LogLevel[Lib]);
+
+   return(pl);
 }
 
 /**----------------------------------------------------------------------------
@@ -924,12 +943,16 @@ int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
  * @date   Octobre 2022
  *
  * @param[in]  Val     Niveau de tolerance ("ERROR","SYSTEM","FATAL","QUIET")
+ * 
+ * @return             Previous tolerance level, or current if no level specified
  */
 int App_ToleranceLevel(char *Val) {
 
    char *endptr=NULL;
-   int  l;
+   int  l,pl;
    
+   pl=App->Tolerance;
+
    if (Val && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
          App->Tolerance=APP_ERROR;
@@ -943,7 +966,7 @@ int App_ToleranceLevel(char *Val) {
          App->Tolerance=strtoul(Val,&endptr,10);
       }
    }
-   return(App->Tolerance);
+   return(pl);
 }
 
 /**----------------------------------------------------------------------------
@@ -952,11 +975,18 @@ int App_ToleranceLevel(char *Val) {
  * @date   Octobre 2022
  *
  * @param[in]  Val     Niveau de tolerance (int)
- */
+ * 
+ * @return             Previous tolerance level, or current if no level specified
+*/
 int App_ToleranceNo(TApp_LogLevel Val) {
+   
+   int pl;
+
+   pl=App->Tolerance;
    if (Val>=APP_FATAL && Val<=APP_QUIET)
       App->Tolerance=Val;
-   return(App->Tolerance);
+
+   return(pl);
 }
 
 /**----------------------------------------------------------------------------
@@ -965,8 +995,14 @@ int App_ToleranceNo(TApp_LogLevel Val) {
  * @date   Septembre 2008
  *
  * @param[in]  Val     Type de temps a afficher
+ * 
+ * @return             Previous time format, or current if no level specified
  */
 int App_LogTime(char *Val) {
+
+   int pf;
+
+   pf=App->LogTime;
 
    if (Val) {
       if (strcasecmp(Val,"NONE")==0) {
@@ -983,7 +1019,7 @@ int App_LogTime(char *Val) {
          App->LogTime=(TApp_LogTime)atoi(Val);
       }
    }
-   return(App->LogTime);
+   return(pf);
 }
 
 /**----------------------------------------------------------------------------
