@@ -157,7 +157,7 @@ void App_InitEnv(){
    if (App->LibsVersion[APP_LIBRPNPHY] && (c=getenv("APP_VERBOSE_RPNPHY"))) {
       Lib_LogLevel(APP_LIBRPNPHY,c);
    }
-   if (App->LibsVersion[APP_LIBRPNPHY] && (c=getenv("APP_VERBOSE_MIDAS"))) {
+   if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MIDAS"))) {
       Lib_LogLevel(APP_LIBMIDAS,c);
    }
 
