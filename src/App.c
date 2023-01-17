@@ -875,7 +875,7 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
    // Keep previous level
    pl=App->LogLevel[Lib];
 
-   if (Val && strlen(Val)) {
+   if (Val && Val[0]!=' ' && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
          App->LogLevel[Lib]=APP_ERROR;
       } else if (strncasecmp(Val,"WARN",4)==0) {
@@ -953,7 +953,7 @@ int App_ToleranceLevel(char *Val) {
    
    pl=App->Tolerance;
 
-   if (Val && strlen(Val)) {
+   if (Val && Val[0]!=' ' && strlen(Val)) {
       if (strncasecmp(Val,"ERROR",5)==0) {
          App->Tolerance=APP_ERROR;
       } else if (strncasecmp(Val,"SYSTEM",6)==0) {
