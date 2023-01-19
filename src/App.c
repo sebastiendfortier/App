@@ -411,7 +411,7 @@ int App_ThreadPlace(void) {
 void App_Start(void) {
 
    char *env=NULL;
-   int   t,mpi;
+   int   t,mpi,l;
 
    // Trap signals (preemption)
    App_Trap(SIGUSR2);
@@ -475,10 +475,15 @@ void App_Start(void) {
       App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
       App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
 
-      if (App->LibsVersion[1]) App_Log(APP_VERBATIM,"Libraries      :\n");
+      l=FALSE;
       for(t=1;t<APP_LIBSMAX;t++) {
-         if (App->LibsVersion[t])
+         if (App->LibsVersion[t]) {
+            if (!l) {
+               App_Log(APP_VERBATIM,"Libraries      :\n");
+               l=TRUE;
+            }
             App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
+         }
       }
 
       if (App->UTC) {
