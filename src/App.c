@@ -876,7 +876,12 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
 
    char *endptr=NULL;
    int  l,pl;
-   
+
+   // If not initialized yet
+   if (!App->Tolerance){
+       App_InitEnv();
+   }
+
    // Keep previous level
    pl=App->LogLevel[Lib];
 
@@ -935,6 +940,11 @@ int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
 
    // Keep previous level
    pl=App->LogLevel[Lib];
+
+   // If not initialized yet
+   if (!App->Tolerance){
+      App_InitEnv();
+   }
 
    if (Val>=APP_FATAL && Val<=APP_QUIET)
       App->LogLevel[Lib]=Val;
