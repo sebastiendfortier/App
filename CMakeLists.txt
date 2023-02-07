@@ -16,7 +16,10 @@ ec_build_info()            # Generate build include file
 
 enable_language(C)
 enable_language(Fortran)
-enable_testing()
+if(EC_INIT_DONE LESS 2)
+    include(CTest)
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
+endif()
 
 include(ec_compiler_presets)
 
@@ -31,6 +34,7 @@ set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 find_package(OpenMP REQUIRED COMPONENTS)
 
 add_subdirectory(src src)
+add_subdirectory(test)
 
 configure_file(config.in ${CMAKE_BINARY_DIR}/${NAME}-config @ONLY)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/${NAME}-config DESTINATION bin)
