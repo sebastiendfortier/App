@@ -16,10 +16,6 @@ ec_build_info()            # Generate build include file
 
 enable_language(C)
 enable_language(Fortran)
-if(EC_INIT_DONE LESS 2)
-    include(CTest)
-    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
-endif()
 
 include(ec_compiler_presets)
 
