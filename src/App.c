@@ -936,7 +936,7 @@ int App_LogLevelNo(TApp_LogLevel Val) {
  */
 int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
 
-   int pl;
+   int l,pl;
 
    // Keep previous level
    pl=App->LogLevel[Lib];
@@ -949,6 +949,10 @@ int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
    if (Val>=APP_FATAL && Val<=APP_QUIET)
       App->LogLevel[Lib]=Val;
 
+   if (Lib==APP_MAIN) {
+      for(l=1;l<APP_LIBSMAX;l++) App->LogLevel[l]=App->LogLevel[APP_MAIN];
+   }
+   
    return(pl);
 }
 
