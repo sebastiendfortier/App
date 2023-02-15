@@ -293,7 +293,7 @@ build:ubuntu-22.04-amd64_gnu-11.3.0:
      - tags
    script:
       - set +e
-      - source ~/ci-env/latest/ubuntu-22.04-amd-64/gnu-11.3.0.sh
+      - source ~/ci-env/latest/ubuntu-22.04-amd-64/gnu.sh
       - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir build_ubuntu-22.04-amd64_gnu-11.3.0
@@ -322,7 +322,7 @@ package:ubuntu-22.04-amd64_gnu-11.3.0:
       name: testing
    script:
       - set +e
-      - source ~/ci-env/latest/ubuntu-22.04-amd-64/gnu-11.3.0.sh
+      - source ~/ci-env/latest/ubuntu-22.04-amd-64/gnu.sh
       - set -e
       - cd build_ubuntu-22.04-amd64_gnu-11.3.0
       - make package
