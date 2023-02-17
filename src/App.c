@@ -1025,15 +1025,15 @@ int App_LogTime(char *Val) {
 
    if (Val) {
       if (strcasecmp(Val,"NONE")==0) {
-         App->LogTime=0;
+         App->LogTime=APP_NODATE;
       } else if (strcasecmp(Val,"DATETIME")==0) {
-         App->LogTime=1;
+         App->LogTime=APP_DATETIME;
       } else if (strcasecmp(Val,"TIME")==0) {
-         App->LogTime=2;
+         App->LogTime=APP_TIME;
       } else if (strcasecmp(Val,"SECOND")==0) {
-         App->LogTime=3;
+         App->LogTime=APP_SECOND;
       } else if (strcasecmp(Val,"MSECOND")==0) {
-         App->LogTime=4;
+         App->LogTime=APP_MSECOND;
       } else {
          App->LogTime=(TApp_LogTime)atoi(Val);
       }
