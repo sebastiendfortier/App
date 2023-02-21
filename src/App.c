@@ -580,8 +580,12 @@ int App_End(int Status) {
       
       if (Status!=EXIT_SUCCESS) {
          App_Log(APP_VERBATIM,"Status         : Error(%i) (%i Errors) (%i Warnings)\n",Status,App->LogError,App->LogWarning);
-      } else {
+      } else if (App->LogError) {
+         App_Log(APP_VERBATIM,"Status         : Ok (%i Errors) (%i Warnings)\n",Status,App->LogError,App->LogWarning);
+      } else if (App->LogWarning) {
          App_Log(APP_VERBATIM,"Status         : Ok (%i Warnings)\n",App->LogWarning);
+      } else {
+         App_Log(APP_VERBATIM,"Status         : Ok\n");
       }
 
       App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
@@ -734,8 +738,8 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
    
    App_TimerStart(App->TimerLog);
 
-   if (Level==APP_WARNING)                   App->LogWarning++;
-   if (Level==APP_ERROR || Level==APP_FATAL) App->LogError++;
+   if (Level==APP_WARNING)                                        App->LogWarning++;
+   if (Level==APP_ERROR || Level==APP_FATAL || Level==APP_SYSTEM) App->LogError++;
 
    // Check if requested level is quiet
    if (App->LogLevel[Lib]==APP_QUIET && Level>APP_VERBATIM) return;
