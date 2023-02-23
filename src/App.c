@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/signal.h>
+#include <signal.h>
 #ifndef _AIX
    #include <sys/syscall.h>
 #endif
