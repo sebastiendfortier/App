@@ -14,19 +14,20 @@ foreach(target IN ITEMS App App-ompi)
    if(rmn_FOUND)
       target_link_libraries(${target} PRIVATE rmn)
    endif()
+
+   set(FORTRAN_MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include/${target})
+   set_target_properties(${target} PROPERTIES
+      VERSION ${PROJECT_VERSION}
+      PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
+      Fortran_MODULE_DIRECTORY ${FORTRAN_MODULE_DIR}
+      POSITION_INDEPENDENT_CODE  ON)
+   target_include_directories(${target} INTERFACE ${FORTRAN_MODULE_DIR})
 endforeach()
 
-set_target_properties(App PROPERTIES 
-   VERSION ${PROJECT_VERSION}
-   PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
-   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   POSITION_INDEPENDENT_CODE  ON)
-
+# TODO: Replace with target_compile_options(...) and target_link_options(...)
+# target_compile_options(App-ompi PRIVATE ${MPI_COMPILE_FLAGS})
+# target_link_options(App-ompi PRIVATE ${MPI_LINK_FLAGS})
 set_target_properties(App-ompi PROPERTIES 
-   VERSION ${PROJECT_VERSION}
-   PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
-   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   POSITION_INDEPENDENT_CODE  ON
    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}"
    LINK_FLAGS "${MPI_LINK_FLAGS}")
 
@@ -39,4 +40,5 @@ install(TARGETS App App-ompi
    ARCHIVE DESTINATION lib
    PUBLIC_HEADER DESTINATION include)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/app.mod TYPE INCLUDE)
+# TODO: Have a separate module install path for each different targets
+install(FILES ${FORTRAN_MODULE_DIR}/app.mod TYPE INCLUDE)
