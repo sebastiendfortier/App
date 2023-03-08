@@ -770,6 +770,9 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
                case APP_MSECOND:
                   timersub(&now,&App->Time,&diff);
                   snprintf(time,32,"%-8li ",diff.tv_sec*1000+diff.tv_usec/1000);
+                  break;
+               case APP_NODATE:
+                  break;
             }
          } else {
             time[0]='\0';
