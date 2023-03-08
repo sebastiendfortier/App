@@ -4,7 +4,7 @@ if (EC_INIT_DONE LESS 2)
 
    if(BUILD_TESTING)
         set(CMAKE_Fortran_PREPROCESS ON)
-        add_executable(test_app_loglevel_noinit test_app_loglevel_noinit.f90)
+        add_executable(test_app_loglevel_noinit EXCLUDE_FROM_ALL test_app_loglevel_noinit.f90)
         add_test(
             NAME test_app_loglevel_noinit
             COMMAND $<TARGET_FILE:test_app_loglevel_noinit>
