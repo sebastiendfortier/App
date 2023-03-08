@@ -26,8 +26,9 @@ target_include_directories(App-ompi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(App-ompi PROPERTIES
    VERSION ${PROJECT_VERSION}
    PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
-   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+   Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ompi
    POSITION_INDEPENDENT_CODE  ON)
+target_include_directories(App-ompi INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include/ompi)
 
 if(rmn_FOUND)
    target_link_libraries(App-ompi PRIVATE rmn)
