@@ -798,8 +798,10 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
       vfprintf(App->LogStream,Format,args);
       va_end(args);
 
-      if (App->LogColor)
+      if (App->LogColor) {
          fprintf(App->LogStream,APP_COLOR_RESET);
+         fflush(App->LogStream);
+      }
       
       if (Level==APP_ERROR || Level==APP_FATAL || Level==APP_SYSTEM) {
          // On errors, save for extenal to use (ex: Tcl)
