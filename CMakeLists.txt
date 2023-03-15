@@ -23,11 +23,11 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_compile_definitions(_${CMAKE_SYSTEM_NAME}_ _GNU_SOURCE)
 
-find_package(MPI REQUIRED COMPONENTS)
+find_package(MPI COMPONENTS)
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 
-find_package(OpenMP REQUIRED COMPONENTS)
+find_package(OpenMP COMPONENTS)
 
 add_subdirectory(src src)
 add_subdirectory(test)
