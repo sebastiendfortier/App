@@ -21,7 +21,6 @@ if(rmn_FOUND)
    target_link_libraries(App PRIVATE rmn)
 endif()
 
-set(MPI_FOUND FALSE)
 if(OpenMP_FOUND AND MPI_FOUND)
    message(STATUS "Generating App OMPI library")
 
