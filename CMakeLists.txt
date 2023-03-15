@@ -26,9 +26,6 @@ add_compile_definitions(_${CMAKE_SYSTEM_NAME}_ _GNU_SOURCE)
 option(WITH_OMPI "Compile with MPI support" TRUE)
 if (WITH_OMPI)
    find_package(MPI REQUIRED)
-   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-   set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
-
    find_package(OpenMP REQUIRED)
 endif()
 
