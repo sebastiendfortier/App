@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-#include <malloc.h>
 #include <alloca.h>
 #include <errno.h>
 #include <limits.h>
@@ -14,6 +13,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/signal.h>
+#include <signal.h>
 #ifndef _AIX
    #include <sys/syscall.h>
 #endif
@@ -368,6 +368,7 @@ int App_ThreadPlace(void) {
       return(TRUE);
    
 #ifdef HAVE_OPENMP
+#ifndef __APPLE__
    if (App->NbThread>1) {
       
       int nbcpu=sysconf(_SC_NPROCESSORS_ONLN);   // Get number of available  cores
@@ -398,6 +399,9 @@ int App_ThreadPlace(void) {
          sched_setaffinity(tid,sizeof(set),&set);
       }
    }
+#else
+#warning "App: Setting affinity is not yet implemented for Apple App_ThreadPlace will be a no-op"
+#endif
 #endif
 #endif
    return(TRUE);

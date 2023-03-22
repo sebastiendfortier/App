@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include </usr/include/regex.h>
+#include <regex.h>
 
 char* strpath(char *Path,char *File) {
 
