@@ -52,6 +52,7 @@ install(TARGETS ${targets}
    EXPORT App-targets
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
-   PUBLIC_HEADER DESTINATION include)
+   PUBLIC_HEADER DESTINATION include
+   INCLUDES DESTINATION include) # Causes auto-generated targets to have ${_IMPORT_PREFIX}/include in INTERFACE_INCLUDE_DIRECTORIES
    
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/app.mod TYPE INCLUDE)
