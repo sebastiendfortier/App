@@ -15,7 +15,7 @@ set_target_properties(App PROPERTIES
    PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
    Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
    POSITION_INDEPENDENT_CODE  ON)
-target_include_directories(App INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(App INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)
 
 if(rmn_FOUND)
    target_link_libraries(App PRIVATE rmn)
@@ -35,7 +35,7 @@ if(OpenMP_FOUND AND MPI_FOUND)
       PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
       Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ompi
       POSITION_INDEPENDENT_CODE  ON)
-   target_include_directories(App-ompi INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include/ompi)
+   target_include_directories(App-ompi INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/ompi>)
 
    if(rmn_FOUND)
       target_link_libraries(App-ompi PRIVATE rmn)
