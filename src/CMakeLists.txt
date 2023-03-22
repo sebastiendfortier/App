@@ -9,7 +9,7 @@ set(targets App)
 
 add_library(App STATIC ${PROJECT_INCLUDE_FILES} ${PROJECT_C_FILES} ${PROJECT_F_FILES})
 add_dependencies(App ${PROJECT_NAME}_build_info)
-target_include_directories(App PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(App PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 set_target_properties(App PROPERTIES
    VERSION ${PROJECT_VERSION}
    PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
@@ -29,7 +29,7 @@ if(OpenMP_FOUND AND MPI_FOUND)
 
    add_library(App-ompi STATIC ${PROJECT_INCLUDE_FILES} ${PROJECT_C_FILES} ${PROJECT_F_FILES})
    add_dependencies(App-ompi ${PROJECT_NAME}_build_info)
-   target_include_directories(App-ompi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+   target_include_directories(App-ompi PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
    set_target_properties(App-ompi PROPERTIES
       VERSION ${PROJECT_VERSION}
       PUBLIC_HEADER "${PROJECT_INCLUDE_FILES}"
@@ -46,9 +46,10 @@ if(OpenMP_FOUND AND MPI_FOUND)
    target_link_libraries(App-ompi PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
 endif()
 
-install(TARGETS ${targets} 
+install(TARGETS ${targets}
+   EXPORT App-targets
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
    PUBLIC_HEADER DESTINATION include)
-
+   
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/app.mod TYPE INCLUDE)
