@@ -16,6 +16,7 @@ set_target_properties(App PROPERTIES
    Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
    POSITION_INDEPENDENT_CODE  ON)
 target_include_directories(App INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)
+add_library(App::App ALIAS App)
 
 if(rmn_FOUND)
    target_link_libraries(App PRIVATE rmn)
@@ -44,6 +45,7 @@ if(OpenMP_FOUND AND MPI_FOUND)
    #----- Specific target dependencies
    target_compile_definitions(App-ompi PUBLIC HAVE_MPI HAVE_OPENMP)
    target_link_libraries(App-ompi PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
+   add_library(App::App-ompi ALIAS App-ompi)
 endif()
 
 install(TARGETS ${targets}
