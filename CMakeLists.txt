@@ -51,8 +51,8 @@ write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
     COMPATIBILITY SameMajorVersion
 )
-install(EXPORT App-targets
-    NAMESPACE App::
+install(EXPORT ${PROJECT_NAME}-targets
+    NAMESPACE ${PROJECT_NAME}::
     DESTINATION ${CONFIG_INSTALL_DIR})
 
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"

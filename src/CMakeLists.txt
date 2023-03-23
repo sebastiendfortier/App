@@ -51,7 +51,7 @@ if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND)
 endif()
 
 install(TARGETS ${targets}
-   EXPORT App-targets
+   EXPORT ${PROJECT_NAME}-targets
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
    PUBLIC_HEADER DESTINATION include
