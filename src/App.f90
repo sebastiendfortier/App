@@ -23,7 +23,7 @@ module app
     !
 
 !   TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
-    type(C_PTR) FUNCTION app_init(type,name,version,desc,stamp) BIND(C,name="App_Init")
+    type(C_PTR) FUNCTION app_init4fortran(type,name,version,desc,stamp) BIND(C,name="App_Init")
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: type
@@ -212,6 +212,17 @@ module app
 end interface
 
 contains
+    type(C_PTR) FUNCTION app_init(type,name,version,desc,stamp)
+        use, intrinsic :: iso_c_binding
+        implicit none
+        integer(C_INT), value :: type
+        character(len=*) :: name
+        character(len=*) :: version
+        character(len=*) :: desc
+        character(len=*) :: stamp
+        app_init = app_init4fortran(type,name//achar(0),version//achar(0),desc//achar(0),stamp//achar(0))
+    end FUNCTION
+    
     SUBROUTINE app_log(level,msg)
         use, intrinsic :: iso_c_binding
         implicit none
