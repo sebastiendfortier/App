@@ -23,7 +23,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_compile_definitions(_${CMAKE_SYSTEM_NAME}_ _GNU_SOURCE)
 
-option(WITH_OMPI "Compile with MPI support" TRUE)
+option(WITH_OMPI "Compile with OpenMP/MPI support" TRUE)
 if (WITH_OMPI)
    find_package(MPI REQUIRED)
    find_package(OpenMP REQUIRED)

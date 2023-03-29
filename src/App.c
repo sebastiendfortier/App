@@ -86,6 +86,7 @@ void App_InitEnv(){
    App->LogColor=FALSE;
    App->LogTime=FALSE;
    App->LogSplit=FALSE;
+   App->LogFlush=FALSE;
    App->LogRank=-1;
 
    // Default log level is WARNING
@@ -112,6 +113,9 @@ void App_InitEnv(){
    }
    if ((c=getenv("APP_LOG_STREAM"))) {
       App->LogFile=strdup(c);
+   }
+   if ((c=getenv("APP_LOG_FLUSH"))) {
+      App->LogFlush=TRUE;
    }
    if ((c=getenv("APP_TOLERANCE"))) {
       App_ToleranceLevel(c);
@@ -804,7 +808,6 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
 
       if (App->LogColor) {
          fprintf(App->LogStream,APP_COLOR_RESET);
-         fflush(App->LogStream);
       }
       
       if (Level==APP_ERROR || Level==APP_FATAL || Level==APP_SYSTEM) {
@@ -817,7 +820,10 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
          if (Level==APP_SYSTEM) {
             perror(APP_LASTERROR);
          }
-         // Force flush on error to garantee we'll see it
+      }
+
+      // Force flush on error, when using colors of if APP_LOG_FLUSH flush is defined
+      if (App->LogFlush || App->LogColor || Level==APP_ERROR || Level==APP_FATAL || Level==APP_SYSTEM) {
          fflush(App->LogStream);
       }
    }

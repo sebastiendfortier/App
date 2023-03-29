@@ -37,7 +37,8 @@ This packages manages various standard tasks needed by applications like:
 - APP_TOLERANCE     : Tolerance level trigerring an exit (ERROR,SYSTEM,FATAL,QUIET) default:QUIET
 - APP_LOG_SPLIT     : Split log stream/file per MPI PE
 - APP_LOG_STREAM    : Define log stream/file (stdout,stderr,filename) default:stderr
-   
+- APP_LOG_FLUSH     : Force flush of buffers at every message (default flush only on error)
+
 - CMCLNG           : Language to use (francais,english)
 - OMP_NUM_THREADS  : Number of openMP threads (for internal purposes)
 
