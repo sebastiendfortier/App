@@ -346,6 +346,9 @@ int App_NodePrint() {
          APP_MPI_CHK( MPI_Get_processor_name(node,&i) );
          APP_MPI_CHK( MPI_Gather(node,MPI_MAX_PROCESSOR_NAME,MPI_CHAR,NULL,0,MPI_DATATYPE_NULL,0,App->Comm) );
       }
+
+      // Allow the master node time to print the list uninterrupted
+      APP_MPI_CHK( MPI_Barrier(App->Comm) );
 #endif
    }
    return(APP_OK);
