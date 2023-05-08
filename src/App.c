@@ -210,12 +210,18 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->OMPSeed=NULL;
    App->Seed=time(NULL);
    App->Signal=0;
+   App->LogWarning=0;
+   App->LogError=0;
 
 #ifdef HAVE_MPI
    App->Comm=MPI_COMM_WORLD;
    App->NodeComm=MPI_COMM_NULL;
    App->NodeHeadComm=MPI_COMM_NULL;
 #endif
+
+   // Trap signals (preemption)
+   App_Trap(SIGUSR2);
+   App_Trap(SIGTERM);
 
    App_InitEnv();
 
@@ -424,15 +430,7 @@ void App_Start(void) {
    char *env=NULL;
    int   t,mpi,l;
 
-   // Trap signals (preemption)
-   App_Trap(SIGUSR2);
-   App_Trap(SIGTERM);
-
    App->State      = APP_RUN;
-   App->LogWarning = 0;
-   App->LogError   = 0;
-   App->Percent    = 0.0;
-   App->Signal     = 0;
 
    gettimeofday(&App->Time,NULL);
 
@@ -618,7 +616,7 @@ int App_End(int Status) {
  */
 void App_TrapProcess(int Signal) {
 
-   App_Log(APP_DEBUG,"Trapped signal %i\n",Signal);
+   App_Log(APP_INFO,"Trapped signal %i\n",Signal);
    App->Signal=Signal;
    
    switch(Signal) {

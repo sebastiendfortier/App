@@ -1,6 +1,6 @@
 NAME       : App
 VERSION    : 
-BUILD      : Debug
+BUILD      :
 STATE      : 
 DESCRIPTION: ECCC-MRD Application management library
 SUMMARY    : This library allows for application management of parameters, logs, ...
