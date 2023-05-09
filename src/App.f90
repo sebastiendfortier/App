@@ -111,7 +111,7 @@ module app
 !    int   App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc);
 
 !   int   App_ParseBool(char *Param,char *Value,char *Var);
-    integer(C_INT) FUNCTION app_parsebool(param,value,var) BIND(C, name="App_ParseBool")
+    logical(C_BOOL) FUNCTION app_parsebool(param,value,var) BIND(C, name="App_ParseBool")
         use, intrinsic :: iso_c_binding
         implicit none
         character(kind=C_CHAR), dimension(*), intent(in) :: param
@@ -174,27 +174,27 @@ module app
     end SUBROUTINE
 
 !   int   App_IsDone(void); 
-    integer(C_INT) FUNCTION app_isdone() BIND(C, name="App_IsDone")
+    logical(C_BOOL) FUNCTION app_isdone() BIND(C, name="App_IsDone")
         use, intrinsic :: iso_c_binding
     end FUNCTION
 
 !   int   App_IsMPI(void);
-    integer(C_INT) FUNCTION app_ismpi() BIND(C, name="App_IsMPI")
+    logical(C_BOOL) FUNCTION app_ismpi() BIND(C, name="App_IsMPI")
         use, intrinsic :: iso_c_binding
     end FUNCTION
 
 !   int   App_IsOMP(void);
-    integer(C_INT) FUNCTION app_isomp() BIND(C, name="App_IsOMP")
+    logical(C_BOOL) FUNCTION app_isomp() BIND(C, name="App_IsOMP")
         use, intrinsic :: iso_c_binding
     end FUNCTION
 
 !   int   App_IsSingleNode(void);
-    integer(C_INT) FUNCTION app_issinglenode() BIND(C, name="App_IsSingleNode")
+    logical(C_BOOL) FUNCTION app_issinglenode() BIND(C, name="App_IsSingleNode")
         use, intrinsic :: iso_c_binding
     end FUNCTION
 
 !   int   App_IsAloneNode(void);
-    integer(C_INT) FUNCTION app_isalonenode() BIND(C, name="App_IsAloneNode")
+    logical(C_BOOL) FUNCTION app_isalonenode() BIND(C, name="App_IsAloneNode")
         use, intrinsic :: iso_c_binding
     end FUNCTION
 
