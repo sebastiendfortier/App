@@ -26,10 +26,18 @@ set_target_properties(App-static App-shared PROPERTIES
    OUTPUT_NAME App
    POSITION_INDEPENDENT_CODE  ON)
 
+add_library(App::App-shared ALIAS App-shared)
+add_library(App::App-static ALIAS App-static)
 if(BUILD_SHARED_LIBS)
     add_library(App::App ALIAS App-shared)
 else()
     add_library(App::App ALIAS App-static)
+endif()
+
+if(BUILD_SHARED_LIBS)
+    add_library(rmn::rmn ALIAS rmn-shared)
+else()
+    add_library(rmn::rmn ALIAS rmn-static)
 endif()
 
 if(rmn_FOUND)
