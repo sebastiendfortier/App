@@ -33,8 +33,8 @@ else()
 endif()
 
 if(rmn_FOUND)
-   target_link_libraries(App-static PRIVATE rmn)
-   target_link_libraries(App-shared PRIVATE rmn)
+   target_link_libraries(App-static PRIVATE rmn::rmn-static)
+   target_link_libraries(App-shared PRIVATE rmn::rmn-shared)
 endif()
 
 if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND) 
@@ -67,8 +67,8 @@ if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND)
       POSITION_INDEPENDENT_CODE  ON)
 
    if(rmn_FOUND)
-      target_link_libraries(App-ompi-static PRIVATE rmn)
-      target_link_libraries(App-ompi-shared PRIVATE rmn)
+      target_link_libraries(App-ompi-static PRIVATE rmn::rmn-ompi-static)
+      target_link_libraries(App-ompi-shared PRIVATE rmn::rmn-ompi-shared)
    endif()
 
    if(BUILD_SHARED_LIBS)
