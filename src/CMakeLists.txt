@@ -34,17 +34,6 @@ else()
     add_library(App::App ALIAS App-static)
 endif()
 
-if(BUILD_SHARED_LIBS)
-    add_library(rmn::rmn ALIAS rmn-shared)
-else()
-    add_library(rmn::rmn ALIAS rmn-static)
-endif()
-
-if(rmn_FOUND)
-   target_link_libraries(App-static PRIVATE rmn::rmn-static)
-   target_link_libraries(App-shared PRIVATE rmn::rmn-shared)
-endif()
-
 if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND) 
    message(STATUS "Generating App ompi library")
 
