@@ -12,7 +12,7 @@ if (EC_INIT_DONE LESS 2)
         set_tests_properties(test_app_loglevel_noinit
             PROPERTIES PASS_REGULAR_EXPRESSION "INFO")
         target_include_directories(test_app_loglevel_noinit PRIVATE ${CMAKE_BINARY_DIR}/src/include)
-        target_link_libraries(test_app_loglevel_noinit App)
+        target_link_libraries(test_app_loglevel_noinit App::App)
         add_dependencies(check test_app_loglevel_noinit)
     endif()
 endif()
