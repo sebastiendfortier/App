@@ -87,7 +87,7 @@ void App_InitEnv(){
    App->LogTime=FALSE;
    App->LogSplit=FALSE;
    App->LogFlush=FALSE;
-   App->LogRank=-1;
+   App->LogRank=0;
 
    // Default log level is WARNING
    for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_WARNING;
@@ -788,7 +788,7 @@ void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
          }
 
 #ifdef HAVE_MPI
-         if (App_IsMPI())
+         if (App_IsMPI() && App->LogRank==-1)
             if (App->Step) {
                fprintf(App->LogStream,"%s%sP%03d (%s) #%d %s",color,time,App->RankMPI,AppLevelNames[Level],App->Step,AppLibLog[Lib]);
             } else {
