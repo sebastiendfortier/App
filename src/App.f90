@@ -232,26 +232,37 @@ contains
         app_init = app_init4fortran(type,name//C_NULL_CHAR,version//C_NULL_CHAR,desc//C_NULL_CHAR,stamp//C_NULL_CHAR)
     end FUNCTION
     
+    FUNCTION app_strc(str) result(c_str)
+        use, intrinsic :: iso_c_binding
+        implicit none
+        character(len=*) :: str
+        character(len=4097) :: c_str
+        integer :: i
+            
+        i=len_trim(str)
+        c_str=str
+        c_str(i+1:i+1)=C_NULL_CHAR
+    end FUNCTION
+
     SUBROUTINE app_logstream(stream)
         use, intrinsic :: iso_c_binding
         implicit none
-        character(len=*) :: stream
-               
-        call app_logstream4fortran(stream//C_NULL_CHAR)
+        character(len=*), intent(in) :: stream               
+
+        if (stream == '$out' .or. stream == '$OUT' .or. stream == '$output' .or. stream == '$OUTPUT') then
+           call app_logstream4fortran('stdout'//C_NULL_CHAR)
+        else 
+           call app_logstream4fortran(app_strc(stream))
+        endif
     end SUBROUTINE
 
     SUBROUTINE app_log(level,msg)
         use, intrinsic :: iso_c_binding
         implicit none
         integer :: level
-        integer :: i
         character(len=*) :: msg
-        character(len=4097) :: c_msg
                
-        i=len_trim(msg)
-        c_msg=msg
-        c_msg(i+1:i+1)=C_NULL_CHAR
-        call app_log4fortran(level,c_msg)
+        call app_log4fortran(level,app_strc(msg))
     end SUBROUTINE
 
     SUBROUTINE lib_log(lib,level,msg)
@@ -259,13 +270,8 @@ contains
         implicit none
         integer :: level
         integer :: lib
-        integer :: i
         character(len=*) :: msg
-        character(len=4097) :: c_msg
 
-        i=len_trim(msg)
-        c_msg=msg
-        c_msg(i+1:i+1)=C_NULL_CHAR
-        call lib_log4fortran(lib,level,c_msg)
+        call lib_log4fortran(lib,level,app_strc(msg))
     end SUBROUTINE
 end module
