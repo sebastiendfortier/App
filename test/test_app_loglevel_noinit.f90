@@ -6,6 +6,7 @@ program test_app_fortran
       integer :: ier
       INTEGER, DIMENSION(-1:1, -1:2) :: A
 
+      call app_logstream('stdout')
       !
       ! Call to app_loglevelno and app_log_level
       ! ensures initialization

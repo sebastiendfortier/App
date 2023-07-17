@@ -641,6 +641,10 @@ void App_Trap(int Signal) {
    // signal(Signal,App_TrapProcess);
 }
 
+void App_LogStream(char *Stream) {
+      App->LogFile=strdup(Stream);
+}
+
 /**----------------------------------------------------------------------------
  * @brief  Ouvrir le fichier log
  * @author Jean-Philippe Gauthier

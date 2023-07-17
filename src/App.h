@@ -202,6 +202,7 @@ int   App_End(int Status);
 void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
 int   Lib_LogLevel(TApp_Lib Lib,char *Val);
 int   Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val);
+void  App_LogStream(char *Stream);
 int   App_LogLevel(char *Val);
 int   App_LogLevelNo(TApp_LogLevel Val);
 int   App_ToleranceLevel(char *Val);

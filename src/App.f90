@@ -6,7 +6,7 @@ module app
        enumerator :: APP_VERBATIM=-1, APP_ALWAYS=0, APP_FATAL=1, APP_SYSTEM=2, APP_ERROR=3, APP_WARNING=4, APP_INFO=5,          &
           APP_TRIVIAL=6, APP_DEBUG=7, APP_EXTRA=8, APP_QUIET=9
        enumerator :: APP_MAIN=0, APP_LIBRMN=1, APP_LIBFST=2, APP_LIBWB=3, APP_LIBGMM=4, APP_LIBVGRID=5, APP_LIBINTERPV=6,       &
-          APP_LIBGEOREF=7, APP_LIBRPNMPI=8, APP_LIBIRIS=9, APP_LIBIO=10, APP_LIBMDLUTIL=11, APP_LIBDYN=12, APP_LIBPHY=13, &
+          APP_LIBGEOREF=7, APP_LIBRPNMPI=8, APP_LIBIRIS=9, APP_LIBIO=10, APP_LIBMDLUTIL=11, APP_LIBDYN=12, APP_LIBPHY=13,       &
           APP_LIBMIDAS=14, APP_LIBEER=15, APP_LIBTDPACK=16
        enumerator :: APP_MASTER=0, APP_THREAD=1
     end enum
@@ -18,9 +18,9 @@ module app
  
     interface
 
-    ! 
-    ! Bindings using C adapters
-    !
+! 
+!   Bindings using C adapters
+!
 
 !   TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
     type(C_PTR) FUNCTION app_init4fortran(type,name,version,desc,stamp) BIND(C,name="App_Init")
@@ -58,7 +58,16 @@ module app
         integer(C_INT), value :: status
     end FUNCTION
 
-!    void  App_Log(TApp_LogLevel Level,const char *Format,...);
+!   void  App_LogStream(char *Stream);
+    SUBROUTINE app_logstream4fortran(stream) BIND(C, name="App_LogStream")
+        use, intrinsic :: iso_c_binding
+        implicit none
+        character(kind=C_CHAR), dimension(*), intent(in) :: stream
+    end SUBROUTINE
+
+!   void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
+
+    !   void  App_Log(TApp_LogLevel Level,const char *Format,...);
     SUBROUTINE app_log4fortran(level,msg) BIND(C, name="App_Log4Fortran")
         use, intrinsic :: iso_c_binding
         implicit none
@@ -66,7 +75,7 @@ module app
         character(kind=C_CHAR), dimension(*), intent(in) :: msg
     end SUBROUTINE
 
-!    void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
+!   void  Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...);
     SUBROUTINE lib_log4Fortran(lib,level,msg) BIND(C, name="Lib_Log4Fortran")
         use, intrinsic :: iso_c_binding
         implicit none
@@ -84,14 +93,14 @@ module app
         character(kind=C_CHAR), dimension(*), intent(in):: level
     end FUNCTION
 
-    !   int App_LogLevelNo(TApp_LogLevel Val) {
+!   int App_LogLevelNo(TApp_LogLevel Val) {
     integer(C_INT) FUNCTION app_loglevelno(levelno) BIND(C, name="App_LogLevelNo")
         use, intrinsic :: iso_c_binding
         implicit none
         integer(C_INT), value :: levelno
     end FUNCTION
 
-    !   int Lib_LogLevel(TApp_Lib Lib,char *Val) {
+!   int Lib_LogLevel(TApp_Lib Lib,char *Val) {
     integer(C_INT) FUNCTION lib_loglevel(lib,level) BIND(C, name="Lib_LogLevel")
         use, intrinsic :: iso_c_binding
         implicit none
@@ -99,7 +108,7 @@ module app
         character(kind=C_CHAR), dimension(*), intent(in) :: level
     end FUNCTION
 
-    !   int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
+!   int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
     integer(C_INT) FUNCTION lib_loglevelno(lib,levelno) BIND(C, name="Lib_LogLevelNo")
         use, intrinsic :: iso_c_binding
         implicit none
@@ -107,7 +116,7 @@ module app
         integer(C_INT), value :: levelno
     end FUNCTION
 
-    !    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
+!    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
 !    int   App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc);
 
 !   int   App_ParseBool(char *Param,char *Value,char *Var);
@@ -220,9 +229,17 @@ contains
         character(len=*) :: version
         character(len=*) :: desc
         character(len=*) :: stamp
-        app_init = app_init4fortran(type,name//achar(0),version//achar(0),desc//achar(0),stamp//achar(0))
+        app_init = app_init4fortran(type,name//C_NULL_CHAR,version//C_NULL_CHAR,desc//C_NULL_CHAR,stamp//C_NULL_CHAR)
     end FUNCTION
     
+    SUBROUTINE app_logstream(stream)
+        use, intrinsic :: iso_c_binding
+        implicit none
+        character(len=*) :: stream
+               
+        call app_logstream4fortran(stream//C_NULL_CHAR)
+    end SUBROUTINE
+
     SUBROUTINE app_log(level,msg)
         use, intrinsic :: iso_c_binding
         implicit none
