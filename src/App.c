@@ -155,11 +155,11 @@ void App_InitEnv(){
    if (App->LibsVersion[APP_LIBMDLUTIL] && (c=getenv("APP_VERBOSE_MDLUTIL"))) {
       Lib_LogLevel(APP_LIBMDLUTIL,c);
    }
-   if (App->LibsVersion[APP_LIBDYN] && (c=getenv("APP_VERBOSE_GEMDYN"))) {
-      Lib_LogLevel(APP_LIBDYN,c);
+   if (App->LibsVersion[APP_LIBGEMDYN] && (c=getenv("APP_VERBOSE_GEMDYN"))) {
+      Lib_LogLevel(APP_LIBGEMDYN,c);
    }
-   if (App->LibsVersion[APP_LIBPHY] && (c=getenv("APP_VERBOSE_RPNPHY"))) {
-      Lib_LogLevel(APP_LIBPHY,c);
+   if (App->LibsVersion[APP_LIBRPNPHY] && (c=getenv("APP_VERBOSE_RPNPHY"))) {
+      Lib_LogLevel(APP_LIBRPNPHY,c);
    }
    if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MIDAS"))) {
       Lib_LogLevel(APP_LIBMIDAS,c);
