@@ -11,9 +11,10 @@ module app
        enumerator :: APP_MASTER=0, APP_THREAD=1
     end enum
     
-    type(C_PTR) :: app_ptr          !Global (opaque) app structure pointer
-    integer :: app_status           !To recuperate application status
-    character(len=4096) :: app_msg  !String to write output messages     
+    integer, parameter :: APP_MSGMAX=4097  !Maximum message length (including C '/0')
+    type(C_PTR) :: app_ptr                 !Global (opaque) app structure pointer
+    integer :: app_status                  !To recuperate application status
+    character(len=APP_MSGMAX) :: app_msg   !String to write output messages     
     character(len=*) , parameter :: EOL = char(13)//char(11)
  
     interface
@@ -236,7 +237,7 @@ contains
         use, intrinsic :: iso_c_binding
         implicit none
         character(len=*) :: str
-        character(len=4097) :: c_str
+        character(len=APP_MSGMAX) :: c_str
         integer :: i
             
         i=len_trim(str)
@@ -248,11 +249,13 @@ contains
         use, intrinsic :: iso_c_binding
         implicit none
         character(len=*), intent(in) :: stream               
+        character(len=APP_MSGMAX) :: c_str
 
         if (stream == '$out' .or. stream == '$OUT' .or. stream == '$output' .or. stream == '$OUTPUT') then
            call app_logstream4fortran('stdout'//C_NULL_CHAR)
         else 
-           call app_logstream4fortran(app_strc(stream))
+           c_str=app_strc(stream)
+           call app_logstream4fortran(c_str)
         endif
     end SUBROUTINE
 
@@ -261,8 +264,10 @@ contains
         implicit none
         integer :: level
         character(len=*) :: msg
+        character(len=APP_MSGMAX) :: c_str
                
-        call app_log4fortran(level,app_strc(msg))
+        c_str=app_strc(msg)
+        call app_log4fortran(level,c_str)
     end SUBROUTINE
 
     SUBROUTINE lib_log(lib,level,msg)
@@ -271,7 +276,9 @@ contains
         integer :: level
         integer :: lib
         character(len=*) :: msg
-
-        call lib_log4fortran(lib,level,app_strc(msg))
+        character(len=APP_MSGMAX) :: c_str
+               
+        c_str=app_strc(msg)
+        call lib_log4fortran(lib,level,c_str)
     end SUBROUTINE
 end module
