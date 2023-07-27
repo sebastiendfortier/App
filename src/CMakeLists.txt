@@ -1,8 +1,17 @@
 message(STATUS "Generating App library")
 
-file(GLOB PROJECT_INCLUDE_FILES *.h)
 file(GLOB PROJECT_C_FILES *.c)
 file(GLOB PROJECT_F_FILES *.f90)
+set(PROJECT_INCLUDE_FILES
+   App.h
+   App_Timer.h
+   str.h)
+set(PROJECT_C_FILES
+   App.c
+   str.c)
+set(PROJECT_F_FILES
+   App.f90
+   MPMD_Module.F90)
 
 #----- Non ompi version
 set(targets App App-shared)
