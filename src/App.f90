@@ -1,6 +1,5 @@
 module app
     use, intrinsic :: iso_c_binding
-    use app_mpmd
     implicit none
 
     enum, bind(C) 
@@ -116,6 +115,13 @@ module app
         implicit none
         integer(C_INT), value :: lib
         integer(C_INT), value :: levelno
+    end FUNCTION
+
+!   int App_LogRank(int NewRank) {
+    integer(C_INT) FUNCTION app_logrank(new_rank) BIND(C, name="App_LogRank")
+        import :: C_INT
+        implicit none
+        integer(C_INT), value :: new_rank
     end FUNCTION
 
 !    int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);

@@ -1,7 +1,5 @@
 message(STATUS "Generating App library")
 
-file(GLOB PROJECT_C_FILES *.c)
-file(GLOB PROJECT_F_FILES *.f90)
 set(PROJECT_INCLUDE_FILES
    App.h
    App_Timer.h
@@ -11,7 +9,7 @@ set(PROJECT_C_FILES
    str.c)
 set(PROJECT_F_FILES
    App.f90
-   MPMD_Module.F90)
+   )
 
 #----- Non ompi version
 set(targets App App-shared)
@@ -46,6 +44,8 @@ endif()
 
 if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND) 
    message(STATUS "Generating App ompi library")
+
+   list(APPEND PROJECT_F_FILES MPMD_Module.F90)
 
    #----- ompi version
    list(APPEND targets App-ompi-static App-ompi-shared)

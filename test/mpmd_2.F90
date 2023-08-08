@@ -1,0 +1,46 @@
+
+program mpmd_2
+    use app_mpmd
+    use app_test_mpmd_helper
+    implicit none
+
+    type(mpmd_context) :: context
+    integer :: comm_12, comm_123, comm_234, comm_124, comm_24
+
+    call context % init(MPMD_TEST2_ID)
+
+    call validate_comm_size(context % get_own_comm(), NUM_PROCS_TEST2, '(2)')
+
+    if (.not. (context % has_component(MPMD_TEST1_ID))) then
+        print *, 'ERROR MPMD_2 can only be launched if MPMD_1 is present!'
+        error stop 1
+    end if
+
+    comm_12 = context % get_shared_comm([MPMD_TEST2_ID, MPMD_TEST1_ID])
+    call validate_comm_size(comm_12, NUM_PROCS_TEST1 + NUM_PROCS_TEST2, '(2, 1)')
+
+    ! Get it again, with inverted IDs. This should *not* be a collective call (mpmd_1 does not do it)
+    comm_12 = context % get_shared_comm([MPMD_TEST1_ID, MPMD_TEST2_ID])
+    call validate_comm_size(comm_12, NUM_PROCS_TEST1 + NUM_PROCS_TEST2, '(2, 1)')
+
+    if (context % has_component(MPMD_TEST3_ID)) then
+        comm_123 = context % get_shared_comm([MPMD_TEST2_ID, MPMD_TEST3_ID, MPMD_TEST1_ID, MPMD_TEST1_ID, MPMD_TEST2_ID])
+        call validate_comm_size(comm_123, NUM_PROCS_TEST1 + NUM_PROCS_TEST2 + NUM_PROCS_TEST3, '(2, 1, 3)')
+    end if
+
+    if (context % has_component(MPMD_TEST3_ID) .and. context % has_component(MPMD_TEST4_ID)) then
+        comm_234 = context % get_shared_comm([MPMD_TEST2_ID, MPMD_TEST4_ID, MPMD_TEST3_ID])
+        call validate_comm_size(comm_234, NUM_PROCS_TEST2 + NUM_PROCS_TEST3 + NUM_PROCS_TEST4, '(2, 3, 4)')
+    end if
+
+    if (context % has_component(MPMD_TEST4_ID)) then
+        comm_124 = context % get_shared_comm([MPMD_TEST4_ID, MPMD_TEST1_ID, MPMD_TEST2_ID])
+        call validate_comm_size(comm_124, NUM_PROCS_TEST1 + NUM_PROCS_TEST2 + NUM_PROCS_TEST4, '(2, 1, 4)')
+
+        comm_24 = context % get_shared_comm([MPMD_TEST2_ID, MPMD_TEST4_ID])
+        call validate_comm_size(comm_24, NUM_PROCS_TEST2 + NUM_PROCS_TEST4, '(2, 4)')
+    end if
+
+    call context % finalize()
+
+end program mpmd_2

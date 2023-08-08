@@ -943,9 +943,25 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
  * @param[in]  Val     Niveau de log a traiter (int)
  * 
  * @return             Previous log level, or current if no level specified
-*/
+ */
 int App_LogLevelNo(TApp_LogLevel Val) {
    return(Lib_LogLevelNo(APP_MAIN,Val));
+}
+
+/**----------------------------------------------------------------------------
+ * @brief  Set the rank of the MPI process that will display messages
+ * 
+ * @param[in]  NewRank  Rank of the MPI process that should display messages.
+ *                      -1 for all processes.
+ *
+ * @return              The old log rank value.
+ */
+int App_LogRank(int NewRank) {
+   const int old_rank = App->LogRank;
+   if (NewRank >= -1 && NewRank < App->NbMPI) {
+      App->LogRank = NewRank;
+   }
+   return old_rank;
 }
 
 /**----------------------------------------------------------------------------
