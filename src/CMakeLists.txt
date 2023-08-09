@@ -98,3 +98,7 @@ install(TARGETS ${static_targets}
    PUBLIC_HEADER DESTINATION include)  
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/app.mod TYPE INCLUDE)
+if (TARGET App::App-ompi)
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/app_mpmd.mod TYPE INCLUDE)
+endif()
+
