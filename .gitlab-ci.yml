@@ -138,7 +138,7 @@ package:rhel-8-amd64_gnu-9.3.0:
 build:ubuntu-18.04-amd64_inteloneapi-2022.1.2:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB18}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB18}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: build
    only:
@@ -161,7 +161,7 @@ build:ubuntu-18.04-amd64_inteloneapi-2022.1.2:
 package:ubuntu-18.04-amd64_inteloneapi-2022.1.2:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB18}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB18}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: package
    only:
@@ -186,7 +186,7 @@ package:ubuntu-18.04-amd64_inteloneapi-2022.1.2:
 build:ubuntu-18.04-amd64_gnu-9.3.0:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB18}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB18}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: build
    only:
@@ -209,7 +209,7 @@ build:ubuntu-18.04-amd64_gnu-9.3.0:
 package:ubuntu-18.04-amd64_gnu-9.3.0:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB18}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB18}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: package
    only:
@@ -234,7 +234,7 @@ package:ubuntu-18.04-amd64_gnu-9.3.0:
 build:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB22}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB22}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: build
    only:
@@ -244,7 +244,6 @@ build:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
    script:
       - set +e
       - source ~/ci-env/latest/ubuntu-22.04-amd-64/inteloneapi-2022.1.2.sh
-      - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir build_ubuntu-22.04-amd64_inteloneapi-2022.1.2
       - cd build_ubuntu-22.04-amd64_inteloneapi-2022.1.2
@@ -258,7 +257,7 @@ build:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
 package:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB22}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB22}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: package
    only:
@@ -283,7 +282,7 @@ package:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
 build:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB22}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB22}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: build
    only:
@@ -293,7 +292,6 @@ build:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
    script:
       - set +e
       - source ~/ci-env/latest/ubuntu-22.04-amd-64/inteloneapi-2023.2.0.sh
-      - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir build_ubuntu-22.04-amd64_inteloneapi-2023.2.0
       - cd build_ubuntu-22.04-amd64_inteloneapi-2023.2.0
@@ -307,7 +305,7 @@ build:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
 package:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB22}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB22}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: package
    only:
@@ -332,7 +330,7 @@ package:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
 build:ubuntu-22.04-amd64_gnu-11.4.0:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB22}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB22}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: build
    only:
@@ -342,7 +340,6 @@ build:ubuntu-22.04-amd64_gnu-11.4.0:
    script:
       - set +e
       - source ~/ci-env/latest/ubuntu-22.04-amd-64/gnu.sh
-      - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir build_ubuntu-22.04-amd64_gnu-11.4.0
       - cd build_ubuntu-22.04-amd64_gnu-11.4.0
@@ -356,7 +353,7 @@ build:ubuntu-22.04-amd64_gnu-11.4.0:
 package:ubuntu-22.04-amd64_gnu-11.4.0:
    variables:
       ORD_SOUMET_MACH    : ${ECCI_GPSC}
-      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_UB22}
+      ORD_SOUMET_IMAGE   : ${ECCI_GPSC_IMG_UB22}
       ORD_SOUMET_PROJECT : ${ECCI_GPSC_PROJECT}
    stage: package
    only:
