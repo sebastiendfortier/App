@@ -26,8 +26,8 @@ static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
-static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "dyn", "phy", "midas", "eer", "tdpack" };
-static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "DYN|", "PHY|", "MIDAS|", "EER|", "TDPACK|" };
+static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "dyn", "phy", "midas", "eer", "tdpack", "mach" };
+static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "DYN|", "PHY|", "MIDAS|", "EER|", "TDPACK|", "MACH|" };
 static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","TRIVIAL","DEBUG","EXTRA" };
 static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
@@ -88,6 +88,7 @@ void App_InitEnv(){
    App->LogSplit=FALSE;
    App->LogFlush=FALSE;
    App->LogRank=0;
+   App->UTC=FALSE;
 
    // Default log level is WARNING
    for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_WARNING;
