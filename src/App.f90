@@ -12,7 +12,6 @@ module app
     end enum
     
     integer, parameter :: APP_MSGMAX=4097  !Maximum message length (including C '/0')
-    type(C_PTR) :: app_ptr                 !Global (opaque) app structure pointer
     integer :: app_status                  !To recuperate application status
     character(len=APP_MSGMAX) :: app_msg   !String to write output messages     
     character(len=*) , parameter :: EOL = char(13)//char(11)

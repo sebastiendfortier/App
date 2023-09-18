@@ -1,10 +1,11 @@
 module app_test_mpmd_helper
     use app
+    use app_mpmd
     use mpi
     implicit none
     private
 
-    public :: validate_comm_size
+    public :: validate_comm_size, mpmd_end_test
 
     integer, parameter, public :: NUM_PROCS_TEST1 = 1
     integer, parameter, public :: NUM_PROCS_TEST2 = 4
@@ -40,5 +41,13 @@ subroutine validate_comm_size(comm, expected_num_procs, msg)
         error stop 1
     end if
 end subroutine validate_comm_size
+
+subroutine mpmd_end_test()
+    implicit none
+    integer :: ierr
+    ! return_status = app_end(0)
+    call Mpmd_Finalize()
+    ! call MPI_Finalize(ierr)
+end subroutine mpmd_end_test
 
 end module app_test_mpmd_helper

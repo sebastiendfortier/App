@@ -130,6 +130,9 @@ typedef enum { APP_AFFINITY_NONE=0,APP_AFFINITY_COMPACT=1,APP_AFFINITY_SCATTER=2
 }
 #define APP_MPI_IN_PLACE(Fld) (App->RankMPI?(Fld):MPI_IN_PLACE)
 
+typedef struct TComponent_ TComponent;
+typedef struct TComponentSet_ TComponentSet;
+
 #endif //HAVE_MPI
 
 // Argument definitions
@@ -180,7 +183,17 @@ typedef struct TApp {
    int            NbNodeMPI,NodeRankMPI; ///< Number of MPI process on the current node
 #ifdef HAVE_MPI
    MPI_Comm       Comm;
-   MPI_Comm       NodeComm,NodeHeadComm;///< Communicator for the current node and the head nodes
+   MPI_Comm       NodeComm,NodeHeadComm; ///< Communicator for the current node and the head nodes
+
+   MPI_Comm       main_comm;             ///< Communicator that groups all executables from this context
+   int            world_rank;            ///< Global rank of this PE
+   int            component_rank;        ///< Local rank of this PE (within its component)
+   TComponent*    self_component;        ///< This PE's component
+   int            num_components;        ///< How many components are part of the MPMD context
+   TComponent*    all_components;        ///< List of components in this context
+   int            num_sets;              ///< How many sets of components are stored in this context
+   int            sets_size;             ///< Size of the array that stores sets of components
+   TComponentSet* sets;                  ///< List of sets that are already stored in this context
 #endif //HAVE_MPI
 
    TApp_Timer     *TimerLog;             ///< Time spent on log printing
@@ -194,7 +207,7 @@ typedef int (TApp_InputParseProc) (void *Def,char *Token,char *Value,int Index);
 
 #define App_Log(LEVEL, ...) Lib_Log(APP_MAIN,LEVEL,__VA_ARGS__)
 
-TApp *App_Init(int Type,char* Name,char* Version,char* Desc,char* Stamp);
+TApp *App_Init(int Type,const char* Name,char* Version,char* Desc,char* Stamp);
 void  App_LibRegister(TApp_Lib Lib,char *Version);
 void  App_Free(void);
 void  App_Start(void);
@@ -210,6 +223,7 @@ int   App_ToleranceNo(TApp_LogLevel Val);
 void  App_LogOpen(void);
 void  App_LogClose(void);
 int   App_LogTime(char *Val);
+int   App_LogRank(int NewRank);
 void  App_Progress(float Percent,const char *Format,...);
 int   App_ParseArgs(TApp_Arg *AArgs,int argc,char *argv[],int Flags);
 int   App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc);
@@ -232,6 +246,8 @@ int   App_NodePrint();
 #ifdef HAVE_MPI
 void  App_SetMPIComm(MPI_Comm Comm);
 int   App_MPIProcCmp(const void *a,const void *b);
+
+#include "MPMD.h"
 #endif
 
 #endif

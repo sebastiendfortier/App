@@ -45,7 +45,9 @@ endif()
 if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND) 
    message(STATUS "Generating App ompi library")
 
-   list(APPEND PROJECT_F_FILES MPMD_Module.F90)
+   list(APPEND PROJECT_F_FILES       MPMD_Module.F90)
+   list(APPEND PROJECT_C_FILES       MPMD.c)
+   list(APPEND PROJECT_INCLUDE_FILES MPMD.h)
 
    #----- ompi version
    list(APPEND targets App-ompi-static App-ompi-shared)

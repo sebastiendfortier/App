@@ -39,6 +39,8 @@ if (EC_INIT_DONE LESS 2)
         target_link_libraries(mpmd_3 App::App-ompi mpmd_helper)
         add_executable(mpmd_4 mpmd_4.F90)
         target_link_libraries(mpmd_4 App::App-ompi mpmd_helper)
+        add_executable(mpmd_5 mpmd_5.c)
+        target_link_libraries(mpmd_5 App::App-ompi)
 
         add_test(NAME mpmd1 COMMAND ${MPIEXEC_EXECUTABLE} ${OVERSUBSCRIBE_FLAG} -n 1 $<TARGET_FILE:mpmd_1>)
         add_test(NAME mpmd2 COMMAND ${MPIEXEC_EXECUTABLE} ${OVERSUBSCRIBE_FLAG}
