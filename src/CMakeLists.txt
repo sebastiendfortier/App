@@ -85,6 +85,21 @@ if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND)
    endif()
 endif()
 
+foreach(APP_TARGET ${shared_targets} ${static_targets})
+   target_compile_options(
+      ${APP_TARGET}
+      PRIVATE
+      $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wall -Wextra>
+      $<$<COMPILE_LANG_AND_ID:C,GNU>:-Werror -Wno-error=pedantic -Wno-error=unused-function>
+      $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-Wall -Wextra -fmax-errors=8>
+      $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:
+               -Werror -Wno-error=unused-function -Wno-error=maybe-uninitialized -Wno-error=unused-variable
+               -Wno-error=unused-dummy-argument -Wno-integer-division -Wno-error=c-binding-type>
+      $<$<COMPILE_LANG_AND_ID:C,Intel>:-Wall -Werror>
+      $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-error-limit 8 -warn all -diag-error=6188,6192 -diag-warning=7712>
+   )
+endforeach()
+
 install(TARGETS ${shared_targets}
    EXPORT ${PROJECT_NAME}-shared-targets
    LIBRARY DESTINATION lib

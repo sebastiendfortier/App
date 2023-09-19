@@ -8,6 +8,8 @@ program mpmd_2
     integer :: return_status
 
     call Mpmd_init(MPMD_TEST2_ID)
+    ! call mpmd_end_test()
+    ! stop
 
     call validate_comm_size(Mpmd_get_own_comm(), NUM_PROCS_TEST2, '(2)')
 
@@ -16,9 +18,7 @@ program mpmd_2
         error stop 1
     end if
 
-    call App_Log(APP_INFO, 'Getting shared 12 (2)')
     comm_12 = Mpmd_get_shared_comm([MPMD_TEST2_ID, MPMD_TEST1_ID])
-    call App_Log(APP_INFO, 'Got shared 12 (2)')
     call validate_comm_size(comm_12, NUM_PROCS_TEST1 + NUM_PROCS_TEST2, '(2, 1)')
 
     ! Get it again, with inverted IDs. This should *not* be a collective call (mpmd_1 does not do it)

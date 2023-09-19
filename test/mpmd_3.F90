@@ -8,6 +8,8 @@ program mpmd_3
     integer :: return_status
 
     call Mpmd_init(MPMD_TEST3_ID)
+    ! call mpmd_end_test()
+    ! stop
 
     call validate_comm_size(Mpmd_get_own_comm(), NUM_PROCS_TEST3, '(3)')
 

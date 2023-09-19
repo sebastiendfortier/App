@@ -18,6 +18,7 @@ typedef struct TComponentSet_ {
     int num_components;     //!< How many components are in the set
     int* component_ids;     //!< IDs of the components in this set
     MPI_Comm communicator;  //!< Communicator shared by these components
+    MPI_Group group;        //!< MPI group shared by these component, created for creating the communicator
 } TComponentSet;
 
 
@@ -42,7 +43,7 @@ void init_comp(TComponent* comp) {
 //! is on board and will be able to ask for a communicator in common with any other
 //! participant (or even multiple other participants at once).
 TApp* Mpmd_Init(const TApp_MpmdId component_id) {
-    #pragma omp single // For this entire function
+    // #pragma omp single // For this entire function
     {
     //////////////////////////////
     // Start by initializing MPI
@@ -152,11 +153,13 @@ TApp* Mpmd_Init(const TApp_MpmdId component_id) {
     if (app->component_rank == 0) {
         for (int i = 0; i < app->num_components; i++) {
             if (app->all_components[i].ranks == NULL)
-                app->all_components[i].ranks = (int*)malloc(app->all_components[i].num_pes);
+                app->all_components[i].ranks = (int*)malloc(app->all_components[i].num_pes * sizeof(int));
 
             MPI_Bcast(app->all_components[i].ranks, app->all_components[i].num_pes, MPI_INT, i, roots_comm);
         }
     }
+
+    // MPI_Finalize(); return NULL;
 
     // Print some info about the components, for debugging
     if (app->world_rank == 0) {
@@ -166,23 +169,30 @@ TApp* Mpmd_Init(const TApp_MpmdId component_id) {
         }
     }
 
+    // MPI_Comm_free(&component_comm);
+
     } // omp single
+
+    // MPI_Finalize();
 
     return get_app_instance();
 }
 
 void Mpmd_Finalize(/* TApp* app */) {
-    MPI_Finalize();
-    return;
+    // return;
     // TODO decide if we call MPI_Finalize in this function 
-    #pragma omp single
+    // #pragma omp single
     {
         TApp* app = get_app_instance();
         if (app->main_comm != MPI_COMM_NULL) {
+
+            print_component(app->self_component, 1);
+
             if (app->sets != NULL) {
                 for (int i = 0; i < app->num_sets; i++) {
                     free(app->sets[i].component_ids);
                     // MPI_Comm_free(&(app->sets[i].communicator));
+                    // MPI_Group_free(&(app->sets[i].group));
                 }
                 free(app->sets);
                 app->sets = NULL;
@@ -192,15 +202,16 @@ void Mpmd_Finalize(/* TApp* app */) {
             for (int i = 0; i < app->num_components; i++) {
                 if (app->all_components[i].ranks != NULL) {
                     App_Log(APP_DEBUG, "Freeing ranks %p\n", app->all_components[i].ranks);
-                    // free(app->all_components[i].ranks);
+                    free(app->all_components[i].ranks);
                 }
             }
+            // MPI_Comm_free(&(app->self_component->comm));
             free(app->all_components);
             app->all_components = NULL;
             app->self_component = NULL;
             app->num_components = 0;
 
-    //         call MPI_Finalize(ierr)
+            MPI_Finalize();
             app->main_comm = MPI_COMM_NULL;
         }
     } // omp single
@@ -215,7 +226,7 @@ int contains(const int* list, const int num_items, const int item) {
 void print_list(int* list, int size) {
     char list_str[512];
     for (int i = 0; i < size; i++) sprintf(list_str + 8*i, "%7d ", list[i]);
-    App_Log(APP_DEBUG, "List: %s\n", list_str);
+    App_Log(APP_EXTRA, "List: %s\n", list_str);
 }
 
 //!> From the given list of components, get the same list in ascending order and without any duplicate.
@@ -227,23 +238,23 @@ int* get_clean_component_list(const int* components, const int num_components, i
     for (int i = 0; i < num_components + 1; i++) tmp_list[i] = -1;
     tmp_list[0] = components[0];
     int num_items = 1;
-    App_Log(APP_DEBUG, "num_components = %d\n", num_components);
+    App_Log(APP_EXTRA, "num_components = %d\n", num_components);
     print_list(tmp_list, num_components + 1);
     for (int i = 1; i < num_components; i++) {
         const int item = components[i];
 
-        App_Log(APP_DEBUG, "i = %d, num_items = %d, item = %d\n", i, num_items, item);
+        App_Log(APP_EXTRA, "i = %d, num_items = %d, item = %d\n", i, num_items, item);
         print_list(tmp_list, num_components + 1);
-        App_Log(APP_DEBUG, "duplicate? %d\n", contains(tmp_list, num_items, item));
+        App_Log(APP_EXTRA, "duplicate? %d\n", contains(tmp_list, num_items, item));
 
         if (contains(tmp_list, num_items, item)) continue; // Duplicate
 
         for (int j = i - 1; j >= 0; j--) { // Loop through sorted list (so far)
-            App_Log(APP_DEBUG, "j = %d\n", j);
+            App_Log(APP_EXTRA, "j = %d\n", j);
             if (tmp_list[j] > item) {
                 // Not the right position yet
                 tmp_list[j + 1] = tmp_list[j];
-                App_Log(APP_DEBUG, "Changed list to... \n");
+                App_Log(APP_EXTRA, "Changed list to... \n");
                 print_list(tmp_list, num_components + 1);
                   
                 if (j == 0) {
@@ -251,7 +262,7 @@ int* get_clean_component_list(const int* components, const int num_components, i
                     tmp_list[j] = item;
                     num_items++;
 
-                    App_Log(APP_DEBUG, "Changed list again to... \n");
+                    App_Log(APP_EXTRA, "Changed list again to... \n");
                     print_list(tmp_list, num_components + 1);
                 }
             }
@@ -260,7 +271,7 @@ int* get_clean_component_list(const int* components, const int num_components, i
                 tmp_list[j + 1] = item;
                 num_items++;
 
-                App_Log(APP_DEBUG, "Correct pos, changed list to... \n");
+                App_Log(APP_EXTRA, "Correct pos, changed list to... \n");
                 print_list(tmp_list, num_components + 1);
                 break;
             }
@@ -374,30 +385,47 @@ MPI_Fint Mpmd_Get_shared_comm_f(
 int32_t Mpmd_has_component(const TApp_MpmdId component_id) {
     const TApp* app = get_app_instance();
 
+    App_Log(APP_DEBUG, "%s: Checking for presence of component %d (%s)\n",
+            __func__, component_id, component_id_to_name(component_id));
+
     for(int i = 0; i < app->num_components; i++) {
         if (app->all_components[i].id == (int)component_id) return 1;
     }
+
+    App_Log(APP_DEBUG, "%s: Component %d (%s) not found\n",
+            __func__, component_id, component_id_to_name(component_id));
 
     // not found
     return 0;
 }
 
-MPI_Group merge_groups(const MPI_Group g1, const MPI_Group g2) {
-    MPI_Group new_group;
-    MPI_Group_union(g1, g2, &new_group);
-    return new_group;
+MPI_Group merge_groups(const MPI_Group* groups, const int num_groups) {
+    if (num_groups < 1) return MPI_GROUP_NULL;
+    if (num_groups == 1) return groups[0];
+
+    App_Log(APP_DEBUG, "%s: Merging %d groups\n", __func__, num_groups);
+
+    MPI_Group unions[num_groups];
+    unions[0] = groups[0];
+    for (int i = 1; i < num_groups; i++) {
+        MPI_Group_union(groups[i], unions[i - 1], &unions[i]);
+    }
+    
+    return unions[num_groups - 1];
 }
 
 void init_component_set(
     TComponentSet* set,
     const int* component_ids,
     const int num_components,
-    const MPI_Comm communicator
+    const MPI_Comm communicator,
+    const MPI_Group group
 ) {
     set->num_components = num_components;
     set->component_ids = (int*)malloc(num_components * sizeof(int));
     memcpy(set->component_ids, component_ids, num_components * sizeof(int));
     set->communicator = communicator;
+    set->group = group;
 }
 
 //!> Create a set of components within this MPMD context. This will create a communicator for them.
@@ -443,7 +471,7 @@ const TComponentSet* create_set(
     for (int i = 0; i < num_components; i++) {
         TComponent* comp = &app->all_components[component_pos[i]];
         if (!comp->already_shared) {
-            if (comp->ranks == NULL) comp->ranks = (int*)malloc(comp->num_pes);
+            if (comp->ranks == NULL) comp->ranks = (int*)malloc(comp->num_pes * sizeof(int));
             MPI_Bcast(comp->ranks, comp->num_pes, MPI_INT, 0, app->self_component->comm);
             comp->already_shared = 1;
         }
@@ -457,32 +485,63 @@ const TComponentSet* create_set(
         MPI_Comm  union_comm;
 
         MPI_Comm_group(app->main_comm, &main_group);
+
+        int group_rank;
+        MPI_Group_rank(main_group, &group_rank);
+
+        int total_num_ranks = 0;
+        for (int i = 0; i < num_components; i++) total_num_ranks += app->all_components[component_pos[i]].num_pes;
+
+        int* all_ranks = (int*) malloc(total_num_ranks * sizeof(int));
+        int running_num_ranks = 0;
         for (int i = 0; i < num_components; i++) {
             const TComponent* comp = &(app->all_components[component_pos[i]]);
-            MPI_Group_incl(main_group, comp->num_pes, comp->ranks, &subgroups[i]);
+
+            // char ranks_str[512];
+            // for (int j = 0; j < comp->num_pes; j++) {
+            //     sprintf(ranks_str + 8*j, "%7d ", comp->ranks[j]);
+            // }
+            // App_Log(APP_DEBUG, "%s: (%s) creating subgroup from %s with ranks %s\n",
+            //         __func__, component_id_to_name(app->self_component->id), component_id_to_name(comp->id), ranks_str);
+
+            memcpy(all_ranks + running_num_ranks, comp->ranks, comp->num_pes * sizeof(int));
+            running_num_ranks += comp->num_pes;
+
+            // MPI_Group_incl(main_group, comp->num_pes, comp->ranks, &subgroups[i]);
         }
 
         // Get the union of all these groups. Using a function to avoid overwriting result during the process
-        union_group = merge_groups(subgroups[0], subgroups[1]);
-        for (int i = 2; i < num_components; i++) {
-            MPI_Group u = union_group; // Copy to avoid overwriting while merging
-            union_group = merge_groups(u, subgroups[i]);
-            // MPI_Group_free(&u);
-        }
+        // union_group = merge_groups(subgroups, num_components);
+        
+        MPI_Barrier(app->self_component->comm);
+        char ranks_str[10000];
+        for (int j = 0; j < total_num_ranks; j++) sprintf(ranks_str + j*8, "%7d ", all_ranks[j]);
+        App_Log(APP_DEBUG, "%s: (%s, rank %d, group rank %d) creating group with ranks %s\n",
+        // fprintf(stderr, "%s: (%s, rank %d, group rank %d) creating group with ranks %s\n",
+                __func__, component_id_to_name(app->self_component->id), app->world_rank, group_rank, ranks_str);
+
+        const int status = MPI_Group_incl(main_group, total_num_ranks, all_ranks, &union_group);
+        // fprintf(stderr, "Group created for rank %d, status %s\n",
+        //         app->world_rank, (status == MPI_SUCCESS ? "MPI_SUCCESS" : "ERROR"));
 
         // This call is collective among all group members, but not main_comm
         {
-            // App_Log(APP)
+            // App_Log(APP_DEBUG, "%s: (%s) Creating shared comm\n",
+            // fprintf(stderr, "%s: (%s) Creating shared comm\n",
+            //         __func__, component_id_to_name(app->self_component->id));
         }
-        MPI_Comm_create_group(app->main_comm, union_group, num_components, &union_comm);
+        MPI_Comm_create_group(app->main_comm, union_group, 0, &union_comm);
 
         // Initialize in place, in the list of sets
-        init_component_set(new_set, components, num_components, union_comm);
+        init_component_set(new_set, components, num_components, union_comm, union_group);
         app->num_sets++;
 
         // for (int i = 0; i < num_components; i++) MPI_Group_free(&subgroups[i]);
         // MPI_Group_free(&union_group);
+
+        free(all_ranks);
     }
+
 
     return new_set;
 }

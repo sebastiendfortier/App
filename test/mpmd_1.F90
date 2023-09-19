@@ -9,13 +9,13 @@ program mpmd_1
     integer :: return_status
 
     call Mpmd_Init(MPMD_TEST1_ID)
+    ! call mpmd_end_test()
+    ! stop
 
     call validate_comm_size(Mpmd_get_own_comm(), NUM_PROCS_TEST1, '(1)')
 
     if (Mpmd_has_component(MPMD_TEST2_ID)) then
-        call App_Log(APP_INFO, 'Getting shared 12 (1)')
         comm_12 = Mpmd_get_shared_comm([MPMD_TEST1_ID, MPMD_TEST2_ID])
-        call App_Log(APP_INFO, 'Got shared 12 (1)')
         call validate_comm_size(comm_12, NUM_PROCS_TEST1 + NUM_PROCS_TEST2, '(1, 2)')
     end if
 
