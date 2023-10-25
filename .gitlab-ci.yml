@@ -141,7 +141,7 @@ package:rhel-8-amd64_gnu-9.3.0:
 
 build:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
    variables:
-      ORD_SOUMET_MACH    : gpsc5
+      ORD_SOUMET_MACH    : gpsc7
       ORD_SOUMET_IMAGE   : registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
       ORD_SOUMET_PROJECT : eccc_mrd
    stage: build
@@ -154,7 +154,7 @@ build:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
    script:
       - set +e
       - source ${ECCI_ENV}/latest/ubuntu-22.04-amd-64/inteloneapi-2022.1.2.sh
-      - echo ${ORDENV_PLAT} registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
+      - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir -pv ${PIPELINE_SUBDIR}/build_ubuntu-22.04-amd64_inteloneapi-2022.1.2
       - SRC_DIR=$(pwd)
@@ -164,7 +164,7 @@ build:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
      
 package:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
    variables:
-      ORD_SOUMET_MACH    : gpsc5
+      ORD_SOUMET_MACH    : gpsc7
       ORD_SOUMET_IMAGE   : registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
       ORD_SOUMET_PROJECT : eccc_mrd
    stage: package
@@ -191,7 +191,7 @@ package:ubuntu-22.04-amd64_inteloneapi-2022.1.2:
 
 build:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
    variables:
-      ORD_SOUMET_MACH    : gpsc5
+      ORD_SOUMET_MACH    : gpsc7
       ORD_SOUMET_IMAGE   : registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
       ORD_SOUMET_PROJECT : eccc_mrd
    stage: build
@@ -204,7 +204,7 @@ build:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
    script:
       - set +e
       - source ${ECCI_ENV}/latest/ubuntu-22.04-amd-64/inteloneapi-2023.2.0.sh
-      - echo ${ORDENV_PLAT} registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
+      - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir -pv ${PIPELINE_SUBDIR}/build_ubuntu-22.04-amd64_inteloneapi-2023.2.0
       - SRC_DIR=$(pwd)
@@ -214,7 +214,7 @@ build:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
      
 package:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
    variables:
-      ORD_SOUMET_MACH    : gpsc5
+      ORD_SOUMET_MACH    : gpsc7
       ORD_SOUMET_IMAGE   : registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
       ORD_SOUMET_PROJECT : eccc_mrd
    stage: package
@@ -241,7 +241,7 @@ package:ubuntu-22.04-amd64_inteloneapi-2023.2.0:
 
 build:ubuntu-22.04-amd64_gnu-11.4.0:
    variables:
-      ORD_SOUMET_MACH    : gpsc5
+      ORD_SOUMET_MACH    : gpsc7
       ORD_SOUMET_IMAGE   : registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
       ORD_SOUMET_PROJECT : eccc_mrd
    stage: build
@@ -254,6 +254,7 @@ build:ubuntu-22.04-amd64_gnu-11.4.0:
    script:
       - set +e
       - source ${ECCI_ENV}/latest/ubuntu-22.04-amd-64/gnu.sh
+      - export ORDENV_PLAT=ubuntu-22.04-amd64-64
       - set -e
       - mkdir -pv ${PIPELINE_SUBDIR}/build_ubuntu-22.04-amd64_gnu-11.4.0
       - SRC_DIR=$(pwd)
@@ -263,7 +264,7 @@ build:ubuntu-22.04-amd64_gnu-11.4.0:
 
 package:ubuntu-22.04-amd64_gnu-11.4.0:
    variables:
-      ORD_SOUMET_MACH    : gpsc5
+      ORD_SOUMET_MACH    : gpsc7
       ORD_SOUMET_IMAGE   : registry.maze.science.gc.ca/ssc-hpcs/generic-job:ubuntu22.04
       ORD_SOUMET_PROJECT : eccc_mrd
    stage: package
