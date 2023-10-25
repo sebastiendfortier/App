@@ -7,15 +7,12 @@ include(ec_init)           # Initialise compilers and ec specific functions
 ec_git_version()           # Get version from git state
 ec_parse_manifest()        # Parse MANIFEST file
 
-project(${NAME} DESCRIPTION "${DESCRIPTION}")
+project(${NAME} DESCRIPTION "${DESCRIPTION}" LANGUAGES C Fortran)
 set(PROJECT_VERSION ${VERSION}${STATE})
 set(${NAME}_VERSION ${PROJECT_VERSION} CACHE INTERNAL "libgeoref version" FORCE) # Needed for cascaded version identification
 
 include(ec_doxygen)        # Doxygen target doc
 ec_build_info()            # Generate build include file
-
-enable_language(C)
-enable_language(Fortran)
 
 include(ec_compiler_presets)
 
