@@ -122,7 +122,7 @@ void App_InitEnv(){
       App_ToleranceLevel(c);
    }
    
-  // Check verbose level of libraries 
+   // Check verbose level of libraries 
    if ((c=getenv("APP_VERBOSE_RMN"))) {
       Lib_LogLevel(APP_LIBRMN,c);
    }
@@ -164,6 +164,12 @@ void App_InitEnv(){
    }
    if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MIDAS"))) {
       Lib_LogLevel(APP_LIBMIDAS,c);
+   }
+   if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MACH"))) {
+      Lib_LogLevel(APP_LIBMACH,c);
+   }
+   if (App->LibsVersion[APP_LIBEER] && (c=getenv("APP_VERBOSE_EER"))) {
+      Lib_LogLevel(APP_LIBEER,c);
    }
 
    // Check the language in the environment 
