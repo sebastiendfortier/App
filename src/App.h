@@ -154,6 +154,7 @@ typedef struct TApp {
 //   char*          TmpDir;               ///< Tmp directory
    char*          Tag;                   ///< Identificateur
    FILE*          LogStream;             ///< Log file associated stream
+   int            LogNoBox;              ///< Display header and footer boxes
    int            LogRank;               ///< Force log from a single rank
    int            LogWarning;            ///< Number of warnings
    int            LogError;              ///< Number of errors
