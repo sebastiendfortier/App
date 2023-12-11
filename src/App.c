@@ -142,40 +142,41 @@ void App_InitEnv(){
    if ((c=getenv("APP_VERBOSE_GMM"))) {
       Lib_LogLevel(APP_LIBGMM,c);
    }
-   if (App->LibsVersion[APP_LIBVGRID] && (c=getenv("APP_VERBOSE_VGRID"))) {
+
+   if ((c=getenv("APP_VERBOSE_VGRID"))) {
       Lib_LogLevel(APP_LIBVGRID,c);
    }
-   if (App->LibsVersion[APP_LIBINTERPV] && (c=getenv("APP_VERBOSE_INTERPV"))) {
+   if ((c=getenv("APP_VERBOSE_INTERPV"))) {
       Lib_LogLevel(APP_LIBINTERPV,c);
    }
-   if (App->LibsVersion[APP_LIBGEOREF] && (c=getenv("APP_VERBOSE_GEOREF"))) {
+   if ((c=getenv("APP_VERBOSE_GEOREF"))) {
       Lib_LogLevel(APP_LIBGEOREF,c);
    }
-   if (App->LibsVersion[APP_LIBRPNMPI] && (c=getenv("APP_VERBOSE_RPNMPI"))) {
+   if ((c=getenv("APP_VERBOSE_RPNMPI"))) {
       Lib_LogLevel(APP_LIBRPNMPI,c);
    }
-   if (App->LibsVersion[APP_LIBIRIS] && (c=getenv("APP_VERBOSE_IRIS"))) {
+   if ((c=getenv("APP_VERBOSE_IRIS"))) {
       Lib_LogLevel(APP_LIBIRIS,c);
    }
-   if (App->LibsVersion[APP_LIBIO] && (c=getenv("APP_VERBOSE_IO"))) {
+   if ((c=getenv("APP_VERBOSE_IO"))) {
       Lib_LogLevel(APP_LIBIO,c);
    }
-   if (App->LibsVersion[APP_LIBMDLUTIL] && (c=getenv("APP_VERBOSE_MDLUTIL"))) {
+   if ((c=getenv("APP_VERBOSE_MDLUTIL"))) {
       Lib_LogLevel(APP_LIBMDLUTIL,c);
    }
-   if (App->LibsVersion[APP_LIBDYN] && (c=getenv("APP_VERBOSE_DYN"))) {
+   if ((c=getenv("APP_VERBOSE_DYN"))) {
       Lib_LogLevel(APP_LIBDYN,c);
    }
-   if (App->LibsVersion[APP_LIBPHY] && (c=getenv("APP_VERBOSE_PHY"))) {
+   if ((c=getenv("APP_VERBOSE_PHY"))) {
       Lib_LogLevel(APP_LIBPHY,c);
    }
-   if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MIDAS"))) {
+   if ((c=getenv("APP_VERBOSE_MIDAS"))) {
       Lib_LogLevel(APP_LIBMIDAS,c);
    }
-   if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MACH"))) {
+   if ((c=getenv("APP_VERBOSE_MACH"))) {
       Lib_LogLevel(APP_LIBMACH,c);
    }
-   if (App->LibsVersion[APP_LIBEER] && (c=getenv("APP_VERBOSE_EER"))) {
+   if ((c=getenv("APP_VERBOSE_EER"))) {
       Lib_LogLevel(APP_LIBEER,c);
    }
 
