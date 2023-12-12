@@ -34,28 +34,6 @@ char* strcatalloc(char *StrTo,char *StrFrom) {
    return(StrTo);
 }
 
-static inline size_t strlen_up_to(const char* string, const size_t max_length) {
-    return MIN(strlen(string),MAX(max_length, 0));
-}
-
-static inline void strrep(char *Str,char Tok,char Rep) {
-
-   if (Str) {
-      while(*Str++!='\0')
-      if (*Str==Tok)
-         *Str=Rep;
-   }
-}
-
-static inline void strblank2end(char *Str,int Length) {
-   int i;
-
-   for (i=strlen(Str)-1;i<Length;i++) {
-      Str[i]=' ';
-   }
-   Str[Length-1] = '\0';
-}
-
 void strtrim(char *Str,char Tok) {
 
    register int i=0;
