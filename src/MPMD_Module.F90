@@ -128,7 +128,7 @@ contains
       logical :: has_component
 
       interface
-         pure function Mpmd_has_component_c(id) result(has_comp) bind(C, name = 'Mpmd_has_component')
+         pure function Mpmd_has_component_c(id) result(has_comp) bind(C, name = 'Mpmd_Has_component')
             import :: C_INT32_T
             implicit none
             integer(C_INT32_T), intent(in), value :: id

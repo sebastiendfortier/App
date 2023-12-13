@@ -79,6 +79,17 @@ if (EC_INIT_DONE LESS 2)
                  -n  9 $<TARGET_FILE:mpmd_3> :
                  -n 16 $<TARGET_FILE:mpmd_4>
         )
+        add_test(NAME mpmd9 COMMAND ${MPIEXEC_EXECUTABLE} ${OVERSUBSCRIBE_FLAG}
+                 -n  9 $<TARGET_FILE:mpmd_3> :
+                 -n 11 $<TARGET_FILE:mpmd_4> :
+                 -n  4 $<TARGET_FILE:mpmd_2> :
+                 -n  1 $<TARGET_FILE:mpmd_1> :
+                 -n  5 $<TARGET_FILE:mpmd_4>
+        )
+        add_test(NAME mpmd10 COMMAND ${MPIEXEC_EXECUTABLE} ${OVERSUBSCRIBE_FLAG}
+                 -n 1 $<TARGET_FILE:mpmd_1> :
+                 -n 5 $<TARGET_FILE:mpmd_5>
+        )
         add_dependencies(check mpmd_1)
 
     endif()

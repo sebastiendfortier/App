@@ -59,13 +59,13 @@ if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND)
    target_include_directories(App-ompi-static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
    target_include_directories(App-ompi-static INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/ompi>)
    target_compile_definitions(App-ompi-static PUBLIC HAVE_MPI HAVE_OPENMP)
-   target_link_libraries(App-ompi-static PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
+   target_link_libraries(App-ompi-static PUBLIC MPI::MPI_C MPI::MPI_Fortran OpenMP::OpenMP_C OpenMP::OpenMP_Fortran)
 
    add_library(App-ompi-shared SHARED $<TARGET_OBJECTS:App-ompi-static>)
    target_include_directories(App-ompi-shared PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
    target_include_directories(App-ompi-shared INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/ompi>)
    target_compile_definitions(App-ompi-shared PUBLIC HAVE_MPI HAVE_OPENMP)
-   target_link_libraries(App-ompi-shared PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
+   target_link_libraries(App-ompi-shared PUBLIC MPI::MPI_C MPI::MPI_Fortran OpenMP::OpenMP_C OpenMP::OpenMP_Fortran)
 
    set_target_properties(App-ompi-static App-ompi-shared PROPERTIES
       VERSION ${PROJECT_VERSION}

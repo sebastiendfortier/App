@@ -24,7 +24,7 @@ MPI_Comm Mpmd_Get_shared_comm(const int32_t* components, const int32_t num_compo
 MPI_Fint Mpmd_Get_shared_comm_f(const int32_t* components, const int32_t num_components);
 MPI_Comm Mpmd_Get_own_comm(void);
 MPI_Fint Mpmd_Get_own_comm_f(void);
-int32_t Mpmd_has_component(const TApp_MpmdId component_id);
+int32_t Mpmd_Has_component(const TApp_MpmdId component_id);
 void Mpmd_Finalize(/*TApp* app*/);
 const char* component_id_to_name(const TApp_MpmdId component_id);
 

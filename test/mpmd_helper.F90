@@ -11,7 +11,7 @@ module app_test_mpmd_helper
     integer, parameter, public :: NUM_PROCS_TEST2 = 4
     integer, parameter, public :: NUM_PROCS_TEST3 = 9
     integer, parameter, public :: NUM_PROCS_TEST4 = 16
-    integer, parameter, public :: NUM_PROCS_TEST5 = 25
+    integer, parameter, public :: NUM_PROCS_TEST5 = 5
 
 contains
 

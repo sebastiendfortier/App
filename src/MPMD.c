@@ -21,29 +21,37 @@ typedef struct TComponentSet_ {
     MPI_Group group;        //!< MPI group shared by these component, created for creating the communicator
 } TComponentSet;
 
+//!> Default values for a TComponent struct
+static const TComponent default_component = (TComponent){
+    .id             = MPMD_NONE,
+    .comm           = MPI_COMM_NULL,
+    .num_pes        = 0,
+    .already_shared = 0,
+    .ranks          = NULL
+};
+
+//!> Default values for a TComponentSet struct
+static const TComponentSet default_set = (TComponentSet) {
+    .num_components = 0,
+    .component_ids  = NULL,
+    .communicator   = MPI_COMM_NULL,
+    .group          = MPI_GROUP_NULL
+};
 
 ////////////////
 // Prototypes
 TApp* get_app_instance(void);
 void print_component(const TComponent* comp, const int verbose);
+void print_set(const TComponentSet* set);
 const TComponentSet* find_set(const TApp* app, const int* components, const int num_components);
 const TComponentSet* create_set(TApp* app, const int* components, const int num_components);
-
-//! Reset values in TComponent instance
-void init_comp(TComponent* comp) {
-    comp->id = MPMD_NONE;
-    comp->comm = MPI_COMM_NULL;
-    comp->num_pes = 0;
-    comp->already_shared = 0;
-    comp->ranks = NULL;
-}
 
 //! Initialize a common MPMD context by telling everyone who we are as a process.
 //! This is a collective call. Everyone who participate in it will know who else
 //! is on board and will be able to ask for a communicator in common with any other
 //! participant (or even multiple other participants at once).
 TApp* Mpmd_Init(const TApp_MpmdId component_id) {
-    // #pragma omp single // For this entire function
+    #pragma omp single // For this entire function
     {
     //////////////////////////////
     // Start by initializing MPI
@@ -112,7 +120,8 @@ TApp* Mpmd_Init(const TApp_MpmdId component_id) {
     MPI_Bcast(&app->num_components, 1, MPI_INT, 0, main_comm);
 
     app->all_components = (TComponent*)malloc(app->num_components * sizeof(TComponent));
-    for (int i = 0; i < app->num_components; i++) init_comp(&app->all_components[i]);
+    for (int i = 0; i < app->num_components; i++) app->all_components[i] = default_component;
+    // for (int i = 0; i < app->num_components; i++) init_comp(&app->all_components[i]);
 
     // Each component root should have a list of the world rank of every other root
     // (we don't know which one is the WORLD root)
@@ -159,8 +168,6 @@ TApp* Mpmd_Init(const TApp_MpmdId component_id) {
         }
     }
 
-    // MPI_Finalize(); return NULL;
-
     // Print some info about the components, for debugging
     if (app->world_rank == 0) {
         App_Log(APP_DEBUG, "%s: Num components = %d\n", __func__, app->num_components);
@@ -169,19 +176,15 @@ TApp* Mpmd_Init(const TApp_MpmdId component_id) {
         }
     }
 
-    // MPI_Comm_free(&component_comm);
-
     } // omp single
-
-    // MPI_Finalize();
 
     return get_app_instance();
 }
 
+//!> Terminate cleanly the MPMD run. This frees the memory allocated by TComponent and TComponentSet structs,
+//!> and it calls MPI_Finalize()
 void Mpmd_Finalize(/* TApp* app */) {
-    // return;
-    // TODO decide if we call MPI_Finalize in this function 
-    // #pragma omp single
+    #pragma omp single
     {
         TApp* app = get_app_instance();
         if (app->main_comm != MPI_COMM_NULL) {
@@ -191,8 +194,8 @@ void Mpmd_Finalize(/* TApp* app */) {
             if (app->sets != NULL) {
                 for (int i = 0; i < app->num_sets; i++) {
                     free(app->sets[i].component_ids);
-                    // MPI_Comm_free(&(app->sets[i].communicator));
-                    // MPI_Group_free(&(app->sets[i].group));
+                    MPI_Comm_free(&(app->sets[i].communicator));
+                    MPI_Group_free(&(app->sets[i].group));
                 }
                 free(app->sets);
                 app->sets = NULL;
@@ -205,7 +208,7 @@ void Mpmd_Finalize(/* TApp* app */) {
                     free(app->all_components[i].ranks);
                 }
             }
-            // MPI_Comm_free(&(app->self_component->comm));
+            MPI_Comm_free(&(app->self_component->comm));
             free(app->all_components);
             app->all_components = NULL;
             app->self_component = NULL;
@@ -217,20 +220,32 @@ void Mpmd_Finalize(/* TApp* app */) {
     } // omp single
 }
 
-int contains(const int* list, const int num_items, const int item) {
+//!> \return 1 if a certain item is in the given list, 0 otherwise
+int contains(
+    const int* list,    //!< The list we want to search
+    const int num_items,//!< How many items there are in the list
+    const int item      //!< The item we are looking for in the list
+) {
     for (int i = 0; i < num_items; i++) if (list[i] == item) return 1;
     return 0;
 }
 
 
 void print_list(int* list, int size) {
-    char list_str[512];
-    for (int i = 0; i < size; i++) sprintf(list_str + 8*i, "%7d ", list[i]);
-    App_Log(APP_EXTRA, "List: %s\n", list_str);
+    if (App_LogLevel(NULL) >= APP_EXTRA) {
+        char list_str[512];
+        for (int i = 0; i < size; i++) sprintf(list_str + 8*i, "%7d ", list[i]);
+        App_Log(APP_EXTRA, "List: %s\n", list_str);
+    }
 }
 
 //!> From the given list of components, get the same list in ascending order and without any duplicate.
-int* get_clean_component_list(const int* components, const int num_components, int* actual_num_components) {
+//!> \return Cleaned up list. Will need to be freed manually!
+int* get_clean_component_list(
+    const int* components,      //!< Initial list of component IDs
+    const int num_components,   //!< How many components there are in the initial list
+    int* actual_num_components  //!< [out] How many components there are in the cleaned-up list
+) {
 
     int tmp_list[num_components + 1];
 
@@ -374,15 +389,18 @@ end:
     return shared_comm;
 }
 
+//!> Callable from Fortran: Wrapper that converts the C communicator returned by
+//!> Mpmd_Get_shared_comm into a Fortran communicator.
+//!> \return The Fortran communicator shared by the given components
 MPI_Fint Mpmd_Get_shared_comm_f(
-    const int32_t* components,
-    const int32_t num_components
+    const int32_t* components,      //!< List of component IDs that should be grouped
+    const int32_t num_components    //!< How many components there are in the list
 ) {
     return MPI_Comm_c2f(Mpmd_Get_shared_comm(components, num_components));
 }
 
 //! \return 1 if given component is present in this MPMD context, 0 if not.
-int32_t Mpmd_has_component(const TApp_MpmdId component_id) {
+int32_t Mpmd_Has_component(const TApp_MpmdId component_id) {
     const TApp* app = get_app_instance();
 
     App_Log(APP_DEBUG, "%s: Checking for presence of component %d (%s)\n",
@@ -399,27 +417,13 @@ int32_t Mpmd_has_component(const TApp_MpmdId component_id) {
     return 0;
 }
 
-MPI_Group merge_groups(const MPI_Group* groups, const int num_groups) {
-    if (num_groups < 1) return MPI_GROUP_NULL;
-    if (num_groups == 1) return groups[0];
-
-    App_Log(APP_DEBUG, "%s: Merging %d groups\n", __func__, num_groups);
-
-    MPI_Group unions[num_groups];
-    unions[0] = groups[0];
-    for (int i = 1; i < num_groups; i++) {
-        MPI_Group_union(groups[i], unions[i - 1], &unions[i]);
-    }
-    
-    return unions[num_groups - 1];
-}
-
+//> Initialize the given component set with specific values
 void init_component_set(
-    TComponentSet* set,
-    const int* component_ids,
-    const int num_components,
-    const MPI_Comm communicator,
-    const MPI_Group group
+    TComponentSet* set,         //!< The set we are initializing
+    const int* component_ids,   //!< List of component IDs that are part of the set
+    const int num_components,   //!< How many components are in the set
+    const MPI_Comm communicator,//!< MPI communicator that is common (and exclusive) to the given components
+    const MPI_Group group       //!< MPI group that contains all (global) ranks from the given components
 ) {
     set->num_components = num_components;
     set->component_ids = (int*)malloc(num_components * sizeof(int));
@@ -452,9 +456,11 @@ const TComponentSet* create_set(
         memcpy(new_list, app->sets, old_size * sizeof(TComponentSet));
         free(app->sets);
         app->sets = new_list;
+        app->sets_size = new_size;
     }
 
     TComponentSet* new_set = &app->sets[app->num_sets];
+    *new_set = default_set;
 
     // Find the position of each target component within the list of all components
     int component_pos[num_components];
@@ -480,7 +486,6 @@ const TComponentSet* create_set(
     // Create the set
     {
         MPI_Group main_group;
-        MPI_Group subgroups[num_components];
         MPI_Group union_group;
         MPI_Comm  union_comm;
 
@@ -490,54 +495,26 @@ const TComponentSet* create_set(
         MPI_Group_rank(main_group, &group_rank);
 
         int total_num_ranks = 0;
-        for (int i = 0; i < num_components; i++) total_num_ranks += app->all_components[component_pos[i]].num_pes;
+        for (int i = 0; i < num_components; i++) {
+            total_num_ranks += app->all_components[component_pos[i]].num_pes;
+        }
 
         int* all_ranks = (int*) malloc(total_num_ranks * sizeof(int));
         int running_num_ranks = 0;
         for (int i = 0; i < num_components; i++) {
             const TComponent* comp = &(app->all_components[component_pos[i]]);
-
-            // char ranks_str[512];
-            // for (int j = 0; j < comp->num_pes; j++) {
-            //     sprintf(ranks_str + 8*j, "%7d ", comp->ranks[j]);
-            // }
-            // App_Log(APP_DEBUG, "%s: (%s) creating subgroup from %s with ranks %s\n",
-            //         __func__, component_id_to_name(app->self_component->id), component_id_to_name(comp->id), ranks_str);
-
             memcpy(all_ranks + running_num_ranks, comp->ranks, comp->num_pes * sizeof(int));
             running_num_ranks += comp->num_pes;
-
-            // MPI_Group_incl(main_group, comp->num_pes, comp->ranks, &subgroups[i]);
         }
 
-        // Get the union of all these groups. Using a function to avoid overwriting result during the process
-        // union_group = merge_groups(subgroups, num_components);
-        
-        MPI_Barrier(app->self_component->comm);
-        char ranks_str[10000];
-        for (int j = 0; j < total_num_ranks; j++) sprintf(ranks_str + j*8, "%7d ", all_ranks[j]);
-        App_Log(APP_DEBUG, "%s: (%s, rank %d, group rank %d) creating group with ranks %s\n",
-        // fprintf(stderr, "%s: (%s, rank %d, group rank %d) creating group with ranks %s\n",
-                __func__, component_id_to_name(app->self_component->id), app->world_rank, group_rank, ranks_str);
-
-        const int status = MPI_Group_incl(main_group, total_num_ranks, all_ranks, &union_group);
-        // fprintf(stderr, "Group created for rank %d, status %s\n",
-        //         app->world_rank, (status == MPI_SUCCESS ? "MPI_SUCCESS" : "ERROR"));
+        MPI_Group_incl(main_group, total_num_ranks, all_ranks, &union_group);
 
         // This call is collective among all group members, but not main_comm
-        {
-            // App_Log(APP_DEBUG, "%s: (%s) Creating shared comm\n",
-            // fprintf(stderr, "%s: (%s) Creating shared comm\n",
-            //         __func__, component_id_to_name(app->self_component->id));
-        }
         MPI_Comm_create_group(app->main_comm, union_group, 0, &union_comm);
 
         // Initialize in place, in the list of sets
         init_component_set(new_set, components, num_components, union_comm, union_group);
         app->num_sets++;
-
-        // for (int i = 0; i < num_components; i++) MPI_Group_free(&subgroups[i]);
-        // MPI_Group_free(&union_group);
 
         free(all_ranks);
     }
@@ -546,6 +523,7 @@ const TComponentSet* create_set(
     return new_set;
 }
 
+//!> Get the string (name) that corresponds to the given component ID
 const char* component_id_to_name(const TApp_MpmdId component_id) {
     switch (component_id)
     {
@@ -642,4 +620,20 @@ void print_component(
             "  already_shared:  %d\n"
             "  ranks:           %s\n",
             component_id_to_name(comp->id), comp->id, comm_str, comp->num_pes, comp->already_shared, ranks_str);
+}
+
+void print_set(
+    const TComponentSet* set
+) {
+    char ids_str[1024];
+    char comm_str[32];
+
+    get_ranks_string(set->component_ids, set->num_components, 1, ids_str);
+    get_comm_string(set->communicator, comm_str);
+
+    App_Log(APP_INFO,
+        "Set: \n"
+        "  num_components: %d\n"
+        "  components: %s\n"
+        "  communicator: %s\n", set->num_components, ids_str, comm_str);
 }
