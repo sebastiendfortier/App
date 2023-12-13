@@ -1,3 +1,5 @@
+#define MIN(x,y) ((x < y) ? x : y)
+#define MAX(x,y) ((x > y) ? x : y)
 #define strend(S) (S+strlen(S))
 
 char* strpath(char *Path,char *File);

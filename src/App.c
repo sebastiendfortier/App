@@ -26,8 +26,8 @@ static TApp AppInstance;                             ///< Static App instance
 __thread TApp *App=&AppInstance;                     ///< Per thread App pointer
 static __thread char APP_LASTERROR[APP_ERRORSIZE];   ///< Last error is accessible through this
 
-static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "gemdyn", "rpnphy", "midas", "eer", "tdpack" };
-static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "GEMDYN|", "RPNPHY|", "MIDAS|", "EER|", "TDPACK|" };
+static char* AppLibNames[]    = { "main", "rmn", "fst", "wb", "gmm", "vgrid", "interpv", "georef", "rpnmpi", "iris", "io", "mdlutil", "dyn", "phy", "midas", "eer", "tdpack", "mach", "spsdyn", "meta" };
+static char* AppLibLog[]      = { "","RMN|", "FST|", "WB|", "GMM|", "VGRID|","INTERPV|","GEOREF|","RPNMPI|","IRIS|", "IO|", "MDLUTIL|", "DYN|", "PHY|", "MIDAS|", "EER|", "TDPACK|", "MACH|", "SPSDYN|", "META|" };
 static char* AppLevelNames[]  = { "INFO","FATAL","SYSTEM","ERROR","WARNING","INFO","TRIVIAL","DEBUG","EXTRA" };
 static char* AppLevelColors[] = { "", APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_RED, APP_COLOR_YELLOW, "", "", APP_COLOR_LIGHTCYAN, APP_COLOR_CYAN };
 
@@ -86,10 +86,12 @@ void App_InitEnv(){
    App->LogWarning=0;
    App->LogError=0;
    App->LogColor=FALSE;
+   App->LogNoBox=FALSE;
    App->LogTime=FALSE;
    App->LogSplit=FALSE;
    App->LogFlush=FALSE;
    App->LogRank=0;
+   App->UTC=FALSE;
 
    // Default log level is WARNING
    for(l=0;l<APP_LIBSMAX;l++) App->LogLevel[l]=APP_WARNING;
@@ -97,6 +99,9 @@ void App_InitEnv(){
    // Check the log parameters in the environment 
    if ((c=getenv("APP_VERBOSE"))) {
       App_LogLevel(c);
+   }
+   if ((c=getenv("APP_VERBOSE_NOBOX"))) {
+      App->LogNoBox=TRUE;
    }
    if ((c=getenv("APP_VERBOSE_COLOR"))) {
       App->LogColor=TRUE;
@@ -123,12 +128,15 @@ void App_InitEnv(){
       App_ToleranceLevel(c);
    }
    
-  // Check verbose level of libraries 
+   // Check verbose level of libraries 
    if ((c=getenv("APP_VERBOSE_RMN"))) {
       Lib_LogLevel(APP_LIBRMN,c);
    }
    if ((c=getenv("APP_VERBOSE_FST"))) {
       Lib_LogLevel(APP_LIBFST,c);
+   }
+   if ((c=getenv("APP_VERBOSE_META"))) {
+      Lib_LogLevel(APP_LIBMETA,c);
    }
    if ((c=getenv("APP_VERBOSE_WB"))) {
       Lib_LogLevel(APP_LIBWB,c);
@@ -157,14 +165,20 @@ void App_InitEnv(){
    if (App->LibsVersion[APP_LIBMDLUTIL] && (c=getenv("APP_VERBOSE_MDLUTIL"))) {
       Lib_LogLevel(APP_LIBMDLUTIL,c);
    }
-   if (App->LibsVersion[APP_LIBGEMDYN] && (c=getenv("APP_VERBOSE_GEMDYN"))) {
-      Lib_LogLevel(APP_LIBGEMDYN,c);
+   if (App->LibsVersion[APP_LIBDYN] && (c=getenv("APP_VERBOSE_DYN"))) {
+      Lib_LogLevel(APP_LIBDYN,c);
    }
-   if (App->LibsVersion[APP_LIBRPNPHY] && (c=getenv("APP_VERBOSE_RPNPHY"))) {
-      Lib_LogLevel(APP_LIBRPNPHY,c);
+   if (App->LibsVersion[APP_LIBPHY] && (c=getenv("APP_VERBOSE_PHY"))) {
+      Lib_LogLevel(APP_LIBPHY,c);
    }
    if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MIDAS"))) {
       Lib_LogLevel(APP_LIBMIDAS,c);
+   }
+   if (App->LibsVersion[APP_LIBMIDAS] && (c=getenv("APP_VERBOSE_MACH"))) {
+      Lib_LogLevel(APP_LIBMACH,c);
+   }
+   if (App->LibsVersion[APP_LIBEER] && (c=getenv("APP_VERBOSE_EER"))) {
+      Lib_LogLevel(APP_LIBEER,c);
    }
 
    // Check the language in the environment 
@@ -421,9 +435,9 @@ int App_ThreadPlace(void) {
             case APP_AFFINITY_SOCKET:    // Pack threads over scattered MPI (hope it fits with sockets) 
                     CPU_SET((App->NodeRankMPI*incmpi)+omp_get_thread_num(),&set);
                     break;
-         
-            case APP_AFFINITY_NONE:      // Don't do anything special
-                    break;
+
+            case APP_AFFINITY_NONE:
+                    break;      
          }
          sched_setaffinity(tid,sizeof(set),&set);
       }
@@ -497,53 +511,55 @@ void App_Start(void) {
 #endif
 
    if (!App->RankMPI) {
+      if (!App->LogNoBox) {
 
-      App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
-      App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
+         App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
+         App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n",App->Name,App->Version,App->TimeStamp);
 
-      l=FALSE;
-      for(t=1;t<APP_LIBSMAX;t++) {
-         if (App->LibsVersion[t]) {
-            if (!l) {
-               App_Log(APP_VERBATIM,"Libraries      :\n");
-               l=TRUE;
+         l=FALSE;
+         for(t=1;t<APP_LIBSMAX;t++) {
+            if (App->LibsVersion[t]) {
+               if (!l) {
+                  App_Log(APP_VERBATIM,"Libraries      :\n");
+                  l=TRUE;
+               }
+               App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
             }
-            App_Log(APP_VERBATIM,"   %-12s: %s\n",AppLibNames[t],App->LibsVersion[t]);
          }
-      }
 
-      if (App->UTC) {
-         App_Log(APP_VERBATIM,"\nStart time     : (UTC) %s",asctime(gmtime(&App->Time.tv_sec)));
-      } else {
-         App_Log(APP_VERBATIM,"\nStart time     : %s",ctime(&App->Time.tv_sec));
-      }
+         if (App->UTC) {
+            App_Log(APP_VERBATIM,"\nStart time     : (UTC) %s",asctime(gmtime(&App->Time.tv_sec)));
+         } else {
+            App_Log(APP_VERBATIM,"\nStart time     : %s",ctime(&App->Time.tv_sec));
+         }
 
 #ifdef HAVE_OPENMP
-      if (App->NbThread>1) {
-         // OpenMP specification version
-         if       (_OPENMP >= 201811)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s5.0)\n",App->NbThread,_OPENMP,_OPENMP>201811?">":"");
-         else if  (_OPENMP >= 201511)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.5)\n",App->NbThread,_OPENMP,_OPENMP>201511?">":"");
-         else if  (_OPENMP >= 201307)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.0)\n",App->NbThread,_OPENMP,_OPENMP>201307?">":"");
-         else if  (_OPENMP >= 201107)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.1)\n",App->NbThread,_OPENMP,_OPENMP>201107?">":"");
-         else if  (_OPENMP >= 200805)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.0)\n",App->NbThread,_OPENMP,_OPENMP>200805?">":"");
-         else if  (_OPENMP >= 200505)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.5)\n",App->NbThread,_OPENMP,_OPENMP>200505?">":"");
-         else if  (_OPENMP >= 200203)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.0)\n",App->NbThread,_OPENMP,_OPENMP>200203?">":"");
-         else if  (_OPENMP >= 199810)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s1.0)\n",App->NbThread,_OPENMP,_OPENMP>199810?">":"");
-         else                          App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d)\n",App->NbThread,_OPENMP);
-      }
+         if (App->NbThread>1) {
+            // OpenMP specification version
+            if       (_OPENMP >= 201811)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s5.0)\n",App->NbThread,_OPENMP,_OPENMP>201811?">":"");
+            else if  (_OPENMP >= 201511)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.5)\n",App->NbThread,_OPENMP,_OPENMP>201511?">":"");
+            else if  (_OPENMP >= 201307)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s4.0)\n",App->NbThread,_OPENMP,_OPENMP>201307?">":"");
+            else if  (_OPENMP >= 201107)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.1)\n",App->NbThread,_OPENMP,_OPENMP>201107?">":"");
+            else if  (_OPENMP >= 200805)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s3.0)\n",App->NbThread,_OPENMP,_OPENMP>200805?">":"");
+            else if  (_OPENMP >= 200505)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.5)\n",App->NbThread,_OPENMP,_OPENMP>200505?">":"");
+            else if  (_OPENMP >= 200203)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s2.0)\n",App->NbThread,_OPENMP,_OPENMP>200203?">":"");
+            else if  (_OPENMP >= 199810)  App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d -- OpenMP %s1.0)\n",App->NbThread,_OPENMP,_OPENMP>199810?">":"");
+            else                          App_Log(APP_VERBATIM,"OpenMP threads : %i (Standard: %d)\n",App->NbThread,_OPENMP);
+         }
 #endif //HAVE_OPENMP
 
-      if (App->NbMPI>1) {
+         if (App->NbMPI>1) {
 #ifdef HAVE_MPI
 #if defined MPI_VERSION && defined MPI_SUBVERSION
-         // MPI specification version
-         App_Log(APP_VERBATIM,"MPI processes  : %i (Standard: %d.%d)\n",App->NbMPI,MPI_VERSION,MPI_SUBVERSION);
+            // MPI specification version
+            App_Log(APP_VERBATIM,"MPI processes  : %i (Standard: %d.%d)\n",App->NbMPI,MPI_VERSION,MPI_SUBVERSION);
 #else
-         App_Log(APP_VERBATIM,"MPI processes  : %i\n",App->NbMPI);
+            App_Log(APP_VERBATIM,"MPI processes  : %i\n",App->NbMPI);
 #endif
 #endif //HAVE_MPI
+         }
+         App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n\n");
       }
-      App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n\n");
    }
 
    // Make sure the header is printed before any other messages from other MPI tasks
@@ -591,35 +607,36 @@ int App_End(int Status) {
    }
    
    if (!App->RankMPI) {
+      if (!App->LogNoBox) {
 
-      gettimeofday(&end,NULL);
-      timersub(&end,&App->Time,&dif);
+         gettimeofday(&end,NULL);
+         timersub(&end,&App->Time,&dif);
 
-      App_Log(APP_VERBATIM,"\n-------------------------------------------------------------------------------------\n");
-      App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n\n",App->Name,App->Version,App->TimeStamp);
-      if (App->Signal) {
-         App_Log(APP_VERBATIM,"Trapped signal : %i\n",App->Signal);         
+         App_Log(APP_VERBATIM,"\n-------------------------------------------------------------------------------------\n");
+         App_Log(APP_VERBATIM,"Application    : %s %s (%s)\n\n",App->Name,App->Version,App->TimeStamp);
+         if (App->Signal) {
+            App_Log(APP_VERBATIM,"Trapped signal : %i\n",App->Signal);         
+         }
+         if (App->UTC) {
+            App_Log(APP_VERBATIM,"Finish time    : (UTC) %s",asctime(gmtime(&end.tv_sec)));
+         } else {
+            App_Log(APP_VERBATIM,"Finish time    : %s",ctime(&end.tv_sec));
+         }
+         App_Log(APP_VERBATIM,"Execution time : %.4f seconds (%.2f ms logging)\n",(float)dif.tv_sec+dif.tv_usec/1000000.0,App_TimerTime_ms(App->TimerLog));
+
+         
+         if (Status!=EXIT_SUCCESS) {
+            App_Log(APP_VERBATIM,"Status         : Error(%i) (%i Errors) (%i Warnings)\n",Status,App->LogError,App->LogWarning);
+         } else if (App->LogError) {
+            App_Log(APP_VERBATIM,"Status         : Ok (%i Errors) (%i Warnings)\n",App->LogError,App->LogWarning);
+         } else if (App->LogWarning) {
+            App_Log(APP_VERBATIM,"Status         : Ok (%i Warnings)\n",App->LogWarning);
+         } else {
+            App_Log(APP_VERBATIM,"Status         : Ok\n");
+         }
+
+         App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
       }
-      if (App->UTC) {
-         App_Log(APP_VERBATIM,"Finish time    : (UTC) %s",asctime(gmtime(&end.tv_sec)));
-      } else {
-         App_Log(APP_VERBATIM,"Finish time    : %s",ctime(&end.tv_sec));
-      }
-      App_Log(APP_VERBATIM,"Execution time : %.4f seconds (%.2f ms logging)\n",(float)dif.tv_sec+dif.tv_usec/1000000.0,App_TimerTime_ms(App->TimerLog));
-
-      
-      if (Status!=EXIT_SUCCESS) {
-         App_Log(APP_VERBATIM,"Status         : Error(%i) (%i Errors) (%i Warnings)\n",Status,App->LogError,App->LogWarning);
-      } else if (App->LogError) {
-         App_Log(APP_VERBATIM,"Status         : Ok (%i Errors) (%i Warnings)\n",App->LogError,App->LogWarning);
-      } else if (App->LogWarning) {
-         App_Log(APP_VERBATIM,"Status         : Ok (%i Warnings)\n",App->LogWarning);
-      } else {
-         App_Log(APP_VERBATIM,"Status         : Ok\n");
-      }
-
-      App_Log(APP_VERBATIM,"-------------------------------------------------------------------------------------\n");
-
       App_LogClose();
 
       App->State=APP_DONE;
