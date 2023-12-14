@@ -9,7 +9,7 @@ ec_parse_manifest()        # Parse MANIFEST file
 
 project(${NAME} DESCRIPTION "${DESCRIPTION}" LANGUAGES C Fortran)
 set(PROJECT_VERSION ${VERSION}${STATE})
-set(${NAME}_VERSION ${PROJECT_VERSION} CACHE INTERNAL "libgeoref version" FORCE) # Needed for cascaded version identification
+set(${NAME}_VERSION ${PROJECT_VERSION} CACHE INTERNAL "libApp version" FORCE) # Needed for cascaded version identification
 
 include(ec_doxygen)        # Doxygen target doc
 ec_build_info()            # Generate build include file
