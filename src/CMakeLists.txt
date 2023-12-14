@@ -1,8 +1,15 @@
 message(STATUS "Generating App library")
 
-file(GLOB PROJECT_INCLUDE_FILES *.h)
-file(GLOB PROJECT_C_FILES *.c)
-file(GLOB PROJECT_F_FILES *.f90)
+set(PROJECT_INCLUDE_FILES
+   App.h
+   App_Timer.h
+   str.h)
+set(PROJECT_C_FILES
+   App.c
+   str.c)
+set(PROJECT_F_FILES
+   App.f90
+   )
 
 #----- Non ompi version
 set(targets App App-shared)
@@ -38,6 +45,10 @@ endif()
 if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND) 
    message(STATUS "Generating App ompi library")
 
+   list(APPEND PROJECT_F_FILES       MPMD_Module.F90)
+   list(APPEND PROJECT_C_FILES       MPMD.c)
+   list(APPEND PROJECT_INCLUDE_FILES MPMD.h)
+
    #----- ompi version
    list(APPEND targets App-ompi-static App-ompi-shared)
    list(APPEND shared_targets App-ompi-shared)
@@ -48,13 +59,13 @@ if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND)
    target_include_directories(App-ompi-static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
    target_include_directories(App-ompi-static INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/ompi>)
    target_compile_definitions(App-ompi-static PUBLIC HAVE_MPI HAVE_OPENMP)
-   target_link_libraries(App-ompi-static PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
+   target_link_libraries(App-ompi-static PUBLIC MPI::MPI_C MPI::MPI_Fortran OpenMP::OpenMP_C OpenMP::OpenMP_Fortran)
 
    add_library(App-ompi-shared SHARED $<TARGET_OBJECTS:App-ompi-static>)
    target_include_directories(App-ompi-shared PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
    target_include_directories(App-ompi-shared INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/ompi>)
    target_compile_definitions(App-ompi-shared PUBLIC HAVE_MPI HAVE_OPENMP)
-   target_link_libraries(App-ompi-shared PUBLIC MPI::MPI_C OpenMP::OpenMP_C)
+   target_link_libraries(App-ompi-shared PUBLIC MPI::MPI_C MPI::MPI_Fortran OpenMP::OpenMP_C OpenMP::OpenMP_Fortran)
 
    set_target_properties(App-ompi-static App-ompi-shared PROPERTIES
       VERSION ${PROJECT_VERSION}
@@ -68,11 +79,26 @@ if(WITH_OMPI AND OpenMP_FOUND AND MPI_FOUND)
    add_library(App::App-ompi-shared ALIAS App-ompi-shared)
    add_library(App::App-ompi-static ALIAS App-ompi-static)
       if(BUILD_SHARED_LIBS)
-      add_library(App::App-ompi ALIAS App-shared)
+      add_library(App::App-ompi ALIAS App-ompi-shared)
    else()
-      add_library(App::App-ompi ALIAS App-static)
+      add_library(App::App-ompi ALIAS App-ompi-static)
    endif()
 endif()
+
+foreach(APP_TARGET ${shared_targets} ${static_targets})
+   target_compile_options(
+      ${APP_TARGET}
+      PRIVATE
+      $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wall -Wextra>
+      $<$<COMPILE_LANG_AND_ID:C,GNU>:-Werror -Wno-error=pedantic -Wno-error=unused-function>
+      $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-Wall -Wextra -fmax-errors=8>
+      $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:
+               -Werror -Wno-error=unused-function -Wno-error=maybe-uninitialized -Wno-error=unused-variable
+               -Wno-error=unused-dummy-argument -Wno-integer-division -Wno-error=c-binding-type>
+      $<$<COMPILE_LANG_AND_ID:C,Intel>:-Wall -Werror>
+      $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-error-limit 8 -warn all -diag-error=6188,6192 -diag-warning=7712>
+   )
+endforeach()
 
 install(TARGETS ${shared_targets}
    EXPORT ${PROJECT_NAME}-shared-targets
@@ -89,3 +115,7 @@ install(TARGETS ${static_targets}
    PUBLIC_HEADER DESTINATION include)  
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/app.mod TYPE INCLUDE)
+if (TARGET App::App-ompi)
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/ompi/app_mpmd.mod TYPE INCLUDE)
+endif()
+

@@ -35,6 +35,8 @@ char* App_ErrorGet(void) {                       //< Return last error
    return(APP_LASTERROR);
 }
 
+TApp* get_app_instance(void) { return &AppInstance; }
+
 unsigned int App_OnceTable[APP_MAXONCE];         ///< Log once table
 
 int App_IsDone(void)       { return(App->State==APP_DONE); }
@@ -198,7 +200,7 @@ void App_InitEnv(){
  *
  *    @return              Parametres de l'application initialisee
 */
-TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
+TApp *App_Init(int Type,const char *Name,char *Version,char *Desc,char* Stamp) {
   
    // In coprocess threaded mode, we need a different App object than the master thread
    App=(Type==APP_THREAD)?(TApp*)malloc(sizeof(TApp)):&AppInstance;
@@ -232,6 +234,16 @@ TApp *App_Init(int Type,char *Name,char *Version,char *Desc,char* Stamp) {
    App->Comm=MPI_COMM_WORLD;
    App->NodeComm=MPI_COMM_NULL;
    App->NodeHeadComm=MPI_COMM_NULL;
+
+   App->main_comm = MPI_COMM_NULL;
+   App->world_rank = -1;
+   App->component_rank = -1;
+   App->self_component = NULL;
+   App->num_components = 0;
+   App->all_components = NULL;
+   App->num_sets = 0;
+   App->sets_size = 0;
+   App->sets = NULL;
 #endif
 
    // Trap signals (preemption)
@@ -262,7 +274,9 @@ void App_Free(void) {
    if (App->DisplsMPI) free(App->DisplsMPI);
    if (App->OMPSeed)   free(App->OMPSeed);
    
-   if (App->Type==APP_THREAD) free(App); App=NULL;
+   if (App->Type==APP_THREAD) App=NULL;
+
+   //TODO MPI stuff (MPMD)
 }
 
 /**----------------------------------------------------------------------------
@@ -405,7 +419,7 @@ int App_ThreadPlace(void) {
       #pragma omp parallel
       {
          cpu_set_t    set;
-         unsigned int nid = omp_get_thread_num();
+         // unsigned int nid = omp_get_thread_num();
          pid_t        tid = (pid_t) syscall(SYS_gettid);
      
          CPU_ZERO(&set);
@@ -444,8 +458,7 @@ int App_ThreadPlace(void) {
 */
 void App_Start(void) {
 
-   char *env=NULL;
-   int   t,mpi,l;
+   int t, l;
 
    App->State      = APP_RUN;
 
@@ -453,6 +466,7 @@ void App_Start(void) {
 
    // Initialize MPI.
 #ifdef HAVE_MPI
+   int mpi;
    MPI_Initialized(&mpi);
 
    if (mpi) {
@@ -472,6 +486,7 @@ void App_Start(void) {
       omp_set_num_threads(App->NbThread);
    } else {
       // Otherwise try to get it from the environement
+      char *env = NULL;
       if ((env=getenv("OMP_NUM_THREADS"))) {
          App->NbThread=atoi(env);
       } else {
@@ -582,6 +597,10 @@ int App_End(int Status) {
       }
    }
 #endif
+
+// #ifdef HAVE_MPI
+//    Mpmd_Finalize(&AppInstance);
+// #endif
 
    // Select status code based on error number
    if (Status<0) {
@@ -734,14 +753,13 @@ void App_Log4Fortran(TApp_LogLevel Level,const char *Message) {
 }
 
 void Lib_Log4Fortran(TApp_Lib Lib,TApp_LogLevel Level,char *Message,int len) {
-
+   (void)len;
    Lib_Log(Lib,Level,"%s\n",Message);
 }
 
 void Lib_Log(TApp_Lib Lib,TApp_LogLevel Level,const char *Format,...) {
 
-   char           *c,*color,time[32];
-   int             l;
+   char           *color,time[32];
    struct timeval  now,diff;
    struct tm      *lctm;
    va_list         args;
@@ -963,9 +981,25 @@ int Lib_LogLevel(TApp_Lib Lib,char *Val) {
  * @param[in]  Val     Niveau de log a traiter (int)
  * 
  * @return             Previous log level, or current if no level specified
-*/
+ */
 int App_LogLevelNo(TApp_LogLevel Val) {
    return(Lib_LogLevelNo(APP_MAIN,Val));
+}
+
+/**----------------------------------------------------------------------------
+ * @brief  Set the rank of the MPI process that will display messages
+ * 
+ * @param[in]  NewRank  Rank of the MPI process that should display messages.
+ *                      -1 for all processes.
+ *
+ * @return              The old log rank value.
+ */
+int App_LogRank(int NewRank) {
+   const int old_rank = App->LogRank;
+   if (NewRank >= -1 && NewRank < App->NbMPI) {
+      App->LogRank = NewRank;
+   }
+   return old_rank;
 }
 
 /**----------------------------------------------------------------------------
@@ -1012,7 +1046,7 @@ int Lib_LogLevelNo(TApp_Lib Lib,TApp_LogLevel Val) {
 int App_ToleranceLevel(char *Val) {
 
    char *endptr=NULL;
-   int  l,pl;
+   int  pl;
    
    pl=App->Tolerance;
 
@@ -1373,7 +1407,7 @@ int App_ParseInput(void *Def,char *File,TApp_InputParseProc *ParseProc) {
       if (parse) {
          // If we find a token, remove spaces and get the associated value
          strtrim(parse,' ');
-         strncpy(token,parse,256);
+         strncpy(token,parse,255);
          values=strtok_r(NULL,"=",&tokensave);
          seq=0;
          n++;
@@ -1551,6 +1585,7 @@ int App_ParseDateSplit(char *Param,char *Value,int *Year,int *Month,int *Day,int
  * @return  1 = ok or 0 = failed
  */ 
  int App_ParseCoords(char *Param,char *Value,double *Lat,double *Lon,int Index) {
+   (void)Param;
    
    double coord;
    char *ptr;
