@@ -1,0 +1,4 @@
+[submodule "cmake_rpn"]
+	path = cmake_rpn
+	url = https://github.com/sebastiendfortier/cmake_rpn.git
+	branch = dev
